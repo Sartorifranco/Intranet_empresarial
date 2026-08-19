@@ -1,0 +1,142 @@
+import { ArrowRight, Link2, Newspaper, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../context'
+import { getCoreApps } from '../services/coreAppService'
+import { getLinks } from '../services/linkService'
+import { getNews } from '../services/newsService'
+import { canManageUsers, getAllUsers } from '../services/userService'
+
+interface MetricCardProps {
+  label: string
+  value: number | string
+  icon: React.ReactNode
+  loading?: boolean
+}
+
+function MetricCard({ label, value, icon, loading }: MetricCardProps) {
+  return (
+    <article className="card-minimal flex items-start gap-4 p-6">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/40 text-brand-primary">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-neutral-500 dark:text-gray-400">{label}</p>
+        {loading ? (
+          <div className="mt-2 h-8 w-16 animate-pulse rounded bg-neutral-100 dark:bg-zinc-800" />
+        ) : (
+          <p className="mt-1 text-3xl font-bold tracking-tight text-neutral-900 dark:text-gray-100">{value}</p>
+        )}
+      </div>
+    </article>
+  )
+}
+
+export function AdminDashboard() {
+  const { user, userProfile } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [newsCount, setNewsCount] = useState(0)
+  const [linksCount, setLinksCount] = useState(0)
+  const [coreAppsCount, setCoreAppsCount] = useState(0)
+  const [usersCount, setUsersCount] = useState<number | null>(null)
+
+  const canViewUsers = canManageUsers(userProfile?.permissions)
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        const [news, links, coreApps] = await Promise.all([
+          getNews({ includeExpired: true }),
+          getLinks(),
+          getCoreApps(),
+        ])
+        setNewsCount(news.length)
+        setLinksCount(links.length)
+        setCoreAppsCount(coreApps.length)
+      } catch (err) {
+        console.error('Error al cargar métricas:', err)
+      }
+
+      if (canViewUsers) {
+        try {
+          const users = await getAllUsers()
+          setUsersCount(users.length)
+        } catch (err) {
+          console.error('Error al cargar usuarios:', err)
+          setUsersCount(null)
+        }
+      }
+
+      setLoading(false)
+    }
+
+    loadMetrics()
+  }, [canViewUsers])
+
+  return (
+    <div className="w-full space-y-8">
+      <header>
+        <p className="text-brand-primary mb-1 text-sm font-medium uppercase tracking-wide">
+          Panel
+        </p>
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-gray-100">Dashboard</h1>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-gray-400">
+          Vista general del contenido y usuarios de la intranet
+        </p>
+      </header>
+
+      <div className="rounded-lg border border-neutral-200 dark:border-zinc-800 bg-neutral-50 dark:bg-zinc-950 px-5 py-4">
+        <p className="text-sm text-neutral-600 dark:text-gray-400">
+          Conectado como{' '}
+          <span className="font-medium text-neutral-900 dark:text-gray-100">{user?.email}</span>
+          {userProfile?.department && (
+            <span className="text-neutral-400"> · {userProfile.department}</span>
+          )}
+        </p>
+      </div>
+
+      <div className="grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {canViewUsers && (
+          <MetricCard
+            label="Total usuarios"
+            value={usersCount ?? '—'}
+            icon={<Users className="h-5 w-5" />}
+            loading={loading}
+          />
+        )}
+        <MetricCard
+          label="Noticias activas"
+          value={newsCount}
+          icon={<Newspaper className="h-5 w-5" />}
+          loading={loading}
+        />
+        <MetricCard
+          label="Enlaces cargados"
+          value={linksCount}
+          icon={<Link2 className="h-5 w-5" />}
+          loading={loading}
+        />
+      </div>
+
+      {coreAppsCount > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-neutral-900 dark:text-gray-100">
+              {coreAppsCount} {coreAppsCount === 1 ? 'aplicación' : 'aplicaciones'} en el ecosistema
+            </p>
+            <p className="mt-0.5 text-sm text-neutral-500 dark:text-gray-400">
+              Las tarjetas de acceso se muestran en la intranet de empleados, no en este panel.
+            </p>
+          </div>
+          <Link
+            to="/intranet"
+            className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-primary transition-colors hover:text-red-950"
+          >
+            Ver intranet
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+}

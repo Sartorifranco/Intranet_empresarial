@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "bacar-web"
+  },
+  "targets": {
+    "bacar-web": {
+      "hosting": {
+        "intranet-bacar": [
+          "intranet-bacar"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
