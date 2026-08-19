@@ -1,0 +1,151 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Correos con privilegios administrativos en Firestore (contenido, usuarios, etc.)
+    function isAdmin() {
+      return request.auth != null
+        && (
+          request.auth.token.email == "sistemas.ti@bacarsa.com.ar"
+          || request.auth.token.email == "admin@bacarsa.com.ar"
+        );
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function canManageUsers() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.super_admin == true
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.manage_users == true
+        );
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.super_admin == true;
+    }
+
+    function canManageContent() {
+      return isAdmin() || isSuperAdmin();
+    }
+
+    function onlyFavoriteAppsUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteApps']);
+    }
+
+    // Perfiles de usuario y permisos
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if canManageUsers() || isAdmin()
+        || (isAuthenticated() && request.auth.uid == userId && onlyFavoriteAppsUpdate());
+      allow delete: if canManageUsers() || isAdmin();
+    }
+
+    // Noticias / comunicados
+    match /news/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Enlaces útiles
+    match /links/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Aplicaciones internas del dashboard (solo Super Admin)
+    match /coreApps/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // Directorio de contactos (lectura pública para cumpleaños en landing)
+    match /contacts/{document} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // Archivos compartidos de Google Drive
+    match /sharedFiles/{document} {
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || canManageUsers();
+    }
+
+    function onlyPollVotesUpdate() {
+      return request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes']);
+    }
+
+    // Encuestas rápidas
+    match /polls/{document} {
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isAuthenticated() && onlyPollVotesUpdate());
+    }
+
+    // Pregunta del día (una por fecha)
+    match /dailyQuestions/{document} {
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isAuthenticated() && onlyPollVotesUpdate());
+    }
+
+    // Reconocimientos (kudos)
+    match /kudos/{document} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Banners / popups
+    match /banners/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Carpetas y recursos jerárquicos
+    match /folders/{document} {
+      allow read: if isAuthenticated();
+      allow create, delete: if canManageContent();
+      allow update: if canManageContent() || canManageUsers();
+    }
+
+    match /resourceItems/{document} {
+      allow read: if isAuthenticated();
+      allow create, delete: if canManageContent();
+      allow update: if canManageContent() || canManageUsers();
+    }
+
+    // Configuración global de módulos
+    match /global_settings/{document} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() || isSuperAdmin();
+    }
+
+    // Turnos — jefe manual por semana (lunes a domingo)
+    match /shiftJefeAssignments/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Rotación de Sistemas y excepciones puntuales
+    match /shift_settings/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /shiftSystemsOverrides/{document} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}

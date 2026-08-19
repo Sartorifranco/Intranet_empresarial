@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Intranet Bacar</string>
+    <string name="title_activity_main">Intranet Bacar</string>
+    <string name="package_name">com.bacar.intranet</string>
+    <string name="custom_url_scheme">com.bacar.intranet</string>
+</resources>

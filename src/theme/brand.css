@@ -1,0 +1,176 @@
+/**
+ * Paleta minimalista institucional.
+ * Modificá estos valores para actualizar la identidad visual en toda la intranet.
+ */
+:root {
+  /* Acento principal — rojo oscuro */
+  --color-primary: #8b0000;
+  --color-primary-hover: #6b0000;
+  --color-primary-light: #fef2f2;
+  --color-primary-muted: #fee2e2;
+  --color-primary-text: #8b0000;
+  --color-primary-ring: rgb(139 0 0 / 0.15);
+
+  /* Tipografía y superficies */
+  --color-text: #0a0a0a;
+  --color-text-muted: #404040;
+  --color-text-subtle: #737373;
+  --color-border: #e5e5e5;
+  --color-border-strong: #d4d4d4;
+
+  /* Navbar y layout */
+  --color-navbar-bg: #ffffff;
+  --color-navbar-border: #e5e5e5;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #fafafa;
+  --color-surface-page: #fafafa;
+
+  /* Contenedor full-width */
+  --layout-max-width: 100%;
+  --layout-padding-x: 1.5rem;
+  --layout-padding-y: 2rem;
+}
+
+.dark {
+  --color-primary: #8b0000;
+  --color-primary-hover: #a30000;
+  --color-primary-light: rgb(139 0 0 / 0.18);
+  --color-primary-muted: rgb(139 0 0 / 0.28);
+  --color-primary-text: #f87171;
+  --color-primary-ring: rgb(139 0 0 / 0.35);
+
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-text-subtle: #71717a;
+  --color-border: #27272a;
+  --color-border-strong: #3f3f46;
+
+  --color-navbar-bg: #09090b;
+  --color-navbar-border: #27272a;
+  --color-surface: #09090b;
+  --color-surface-elevated: #18181b;
+  --color-surface-muted: #18181b;
+  --color-surface-page: #09090b;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --layout-padding-x: 2.5rem;
+  }
+}
+
+/* Utilidades de marca */
+.bg-brand-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-brand-primary-light {
+  background-color: var(--color-primary-light);
+}
+
+.text-brand-primary {
+  color: var(--color-primary-text);
+}
+
+.text-brand-body {
+  color: var(--color-text);
+}
+
+.text-brand-muted {
+  color: var(--color-text-muted);
+}
+
+.border-brand {
+  border-color: var(--color-border);
+}
+
+.hover\:bg-brand-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.nav-link-active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-text);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  transition: background-color 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-brand-focus:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.spinner-brand {
+  border-color: var(--color-primary);
+  border-top-color: transparent;
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    to bottom,
+    var(--color-surface-muted),
+    var(--color-surface)
+  );
+}
+
+.layout-container {
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--layout-padding-x);
+  padding-right: var(--layout-padding-x);
+  padding-top: var(--layout-padding-y);
+  padding-bottom: var(--layout-padding-y);
+}
+
+.card-minimal {
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900;
+  }
+
+  .surface-muted {
+    @apply bg-neutral-50 dark:bg-zinc-900/60;
+  }
+
+  .text-heading {
+    @apply text-neutral-900 dark:text-gray-100;
+  }
+
+  .text-body-muted {
+    @apply text-neutral-500 dark:text-gray-400;
+  }
+
+  .border-subtle {
+    @apply border-neutral-200 dark:border-zinc-800;
+  }
+
+  .input-surface {
+    @apply border border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-gray-100 dark:placeholder:text-gray-500;
+  }
+
+  .hover-surface {
+    @apply hover:bg-neutral-100 dark:hover:bg-zinc-800;
+  }
+}
