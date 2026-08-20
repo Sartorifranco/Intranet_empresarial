@@ -91,9 +91,13 @@ export {
   canUserAccessResource,
   isFolderPublic,
   isResourcePublic,
+  resolveRootAreaIdForFolder,
+  previewRootAreaIdBackfill,
+  applyRootAreaIdBackfill,
   type Folder,
   type FolderLevelContents,
   type ResourceItem,
+  type RootAreaBackfillRow,
 } from './folderService'
 export {
   createLink,
