@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "cap:sync": "npm run build && npx cap sync android",
     "cap:open": "npx cap open android",
-    "android": "npm run cap:sync && npx cap open android"
+    "android": "npm run cap:sync && npx cap open android",
+    "migrate:roles": "node scripts/migrate-user-roles.mjs",
+    "migrate:roles:dry-run": "node scripts/migrate-user-roles.mjs --dry-run",
+    "test:rules:users": "node scripts/test-users-rules.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
@@ -24,12 +27,14 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@oxlint/binding-win32-x64-msvc": "^1.71.0",
     "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
+    "firebase-admin": "^13.6.0",
     "oxlint": "^1.69.0",
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",
