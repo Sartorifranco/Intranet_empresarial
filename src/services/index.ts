@@ -80,6 +80,7 @@ export {
   createFolder,
   createResourceItem,
   deleteFolder,
+  deleteResourceItem,
   getFoldersAndItems,
   updateFolderName,
   updateFolderPermissions,
