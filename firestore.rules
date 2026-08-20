@@ -38,6 +38,30 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    function callerManagedAreaIds() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.managedAreaIds;
+    }
+
+    function isAreaAdminOf(areaId) {
+      return isAreaAdmin()
+        && areaId is string
+        && callerManagedAreaIds() is list
+        && areaId in callerManagedAreaIds();
+    }
+
+    function folderRootAreaId(folderId) {
+      return get(/databases/$(database)/documents/folders/$(folderId)).data.rootAreaId;
+    }
+
+    // Create de area admin: rootAreaId del hijo debe coincidir EXACTO con el del padre.
+    function areaAdminCreatesUnderParent(parentId) {
+      return parentId is string
+        && exists(/databases/$(database)/documents/folders/$(parentId))
+        && folderRootAreaId(parentId) is string
+        && request.resource.data.rootAreaId == folderRootAreaId(parentId)
+        && isAreaAdminOf(request.resource.data.rootAreaId);
+    }
+
     function canManageContent() {
       return isAdmin() || isSuperAdmin();
     }
@@ -128,16 +152,56 @@ service cloud.firestore {
     }
 
     // Carpetas y recursos jerárquicos
+    // PENDIENTE (alta prioridad / Prompt 3.1): allow read sigue abierto a cualquier
+    // autenticado; allowedUsers / sharedWithAreaIds / rootAreaId aún no se aplican
+    // en rules de lectura (solo en frontend). No cambiar en esta pasada.
     match /folders/{document} {
       allow read: if isAuthenticated();
-      allow create, delete: if canManageContent();
-      allow update: if canManageContent() || canManageUsers();
+      allow create: if canManageContent()
+        || (
+          isAreaAdmin()
+          && request.resource.data.parentFolderId != null
+          && areaAdminCreatesUnderParent(request.resource.data.parentFolderId)
+        );
+      allow update: if canManageContent()
+        || canManageUsers()
+        || (
+          isAreaAdmin()
+          && resource.data.rootAreaId is string
+          && isAreaAdminOf(resource.data.rootAreaId)
+          && request.resource.data.rootAreaId == resource.data.rootAreaId
+        );
+      allow delete: if canManageContent()
+        || (
+          isAreaAdmin()
+          && resource.data.parentFolderId != null
+          && resource.data.rootAreaId is string
+          && isAreaAdminOf(resource.data.rootAreaId)
+        );
     }
 
     match /resourceItems/{document} {
       allow read: if isAuthenticated();
-      allow create, delete: if canManageContent();
-      allow update: if canManageContent() || canManageUsers();
+      allow create: if canManageContent()
+        || (
+          isAreaAdmin()
+          && request.resource.data.folderId != null
+          && areaAdminCreatesUnderParent(request.resource.data.folderId)
+        );
+      allow update: if canManageContent()
+        || canManageUsers()
+        || (
+          isAreaAdmin()
+          && resource.data.rootAreaId is string
+          && isAreaAdminOf(resource.data.rootAreaId)
+          && request.resource.data.rootAreaId == resource.data.rootAreaId
+        );
+      allow delete: if canManageContent()
+        || (
+          isAreaAdmin()
+          && resource.data.rootAreaId is string
+          && isAreaAdminOf(resource.data.rootAreaId)
+        );
     }
 
     // Configuración global de módulos
