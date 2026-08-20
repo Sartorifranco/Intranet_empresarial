@@ -7,6 +7,7 @@ import {
   AdminResources,
   AdminShifts,
   AdminUsers,
+  AreaAdminResources,
   AppsHub,
   Directory,
   Home,
@@ -15,6 +16,7 @@ import {
 } from '../pages'
 import { ProtectedRoute } from './ProtectedRoute'
 import { AdminRoute } from './AdminRoute'
+import { AreaAdminRoute } from './AreaAdminRoute'
 import { ModulePermissionRoute } from './ModulePermissionRoute'
 
 export function AppRoutes() {
@@ -33,6 +35,10 @@ export function AppRoutes() {
             </Route>
             <Route element={<ModulePermissionRoute permission="view_drive" module="resourcesEnabled" />}>
               <Route path="recursos" element={<Resources />} />
+            </Route>
+
+            <Route element={<AreaAdminRoute />}>
+              <Route path="mis-areas" element={<AreaAdminResources />} />
             </Route>
           </Route>
 

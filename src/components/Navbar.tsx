@@ -33,6 +33,7 @@ export function Navbar() {
   const { settings } = useGlobalSettings()
   const permissions = userProfile?.permissions ?? DEFAULT_PERMISSIONS
   const canAccessAdmin = isSuperAdminEmail(user?.email)
+  const canAccessAreaAdmin = userProfile?.role === 'admin'
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [news, setNews] = useState<NewsPost[]>([])
@@ -237,6 +238,11 @@ export function Navbar() {
           {settings.resourcesEnabled && permissions.view_drive && (
             <NavLink to="/recursos" className={navLinkClass}>
               Recursos
+            </NavLink>
+          )}
+          {canAccessAreaAdmin && (
+            <NavLink to="/mis-areas" className={navLinkClass}>
+              Mis áreas
             </NavLink>
           )}
         </nav>
