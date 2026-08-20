@@ -10,7 +10,6 @@ import {
   Timestamp,
   updateDoc,
   where,
-  writeBatch,
   type DocumentData,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -50,6 +49,18 @@ export interface RootAreaBackfillRow {
   name: string
   currentRootAreaId: string | '(sin rootAreaId)'
   targetRootAreaId: string
+}
+
+export interface RootAreaBackfillFailure {
+  collection: 'folders' | 'resourceItems'
+  id: string
+  name: string
+}
+
+export interface RootAreaBackfillApplyResult {
+  updated: number
+  errors: number
+  failures: RootAreaBackfillFailure[]
 }
 
 function toDate(value: Timestamp | Date): Date {
@@ -418,43 +429,39 @@ export async function previewRootAreaIdBackfill(): Promise<{
 // TEMPORAL: borrar después de correr el backfill una sola vez
 export async function applyRootAreaIdBackfill(
   changes: RootAreaBackfillRow[],
-): Promise<{ updated: number; errors: number }> {
+): Promise<RootAreaBackfillApplyResult> {
   let updated = 0
-  let errors = 0
-  const CHUNK = 400
+  const failures: RootAreaBackfillFailure[] = []
+  // Chunks chicos + allSettled: evita batch.commit() colgado en el cliente
+  // aunque Firestore ya haya persistido los writes.
+  const CONCURRENCY = 25
 
-  for (let i = 0; i < changes.length; i += CHUNK) {
-    const chunk = changes.slice(i, i + CHUNK)
-    const batch = writeBatch(db)
+  for (let i = 0; i < changes.length; i += CONCURRENCY) {
+    const chunk = changes.slice(i, i + CONCURRENCY)
+    const results = await Promise.allSettled(
+      chunk.map(async (row) => {
+        const collectionName =
+          row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
+        await updateDoc(doc(db, collectionName, row.id), {
+          rootAreaId: row.targetRootAreaId,
+        })
+      }),
+    )
 
-    for (const row of chunk) {
-      const collectionName =
-        row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
-      batch.update(doc(db, collectionName, row.id), {
-        rootAreaId: row.targetRootAreaId,
-      })
-    }
-
-    try {
-      await batch.commit()
-      updated += chunk.length
-    } catch (err) {
-      console.error('Error en batch de backfill rootAreaId:', err)
-      for (const row of chunk) {
-        try {
-          const collectionName =
-            row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
-          await updateDoc(doc(db, collectionName, row.id), {
-            rootAreaId: row.targetRootAreaId,
-          })
-          updated += 1
-        } catch (rowErr) {
-          errors += 1
-          console.error(`Error backfill ${row.collection}/${row.id}:`, rowErr)
-        }
+    results.forEach((result, index) => {
+      const row = chunk[index]
+      if (result.status === 'fulfilled') {
+        updated += 1
+        return
       }
-    }
+      failures.push({
+        collection: row.collection,
+        id: row.id,
+        name: row.name,
+      })
+      console.error(`Error backfill ${row.collection}/${row.id}:`, result.reason)
+    })
   }
 
-  return { updated, errors }
+  return { updated, errors: failures.length, failures }
 }

@@ -98,6 +98,8 @@ export {
   type FolderLevelContents,
   type ResourceItem,
   type RootAreaBackfillRow,
+  type RootAreaBackfillFailure,
+  type RootAreaBackfillApplyResult,
 } from './folderService'
 export {
   createLink,

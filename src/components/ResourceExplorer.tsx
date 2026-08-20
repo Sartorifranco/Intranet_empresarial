@@ -10,7 +10,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { type FormEvent, useCallback, useEffect, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   createFolder,
@@ -29,6 +29,7 @@ import {
   type Folder,
   type ResourceItem,
   type RootAreaBackfillRow,
+  type RootAreaBackfillApplyResult,
 } from '../services/folderService'
 import {
   getAllUsers,
@@ -396,10 +397,17 @@ export type ResourceExplorerMode = 'super' | 'areaAdmin'
 function RootAreaBackfillPanel() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [applying, setApplying] = useState(false)
+  const [phase, setPhase] = useState<'preview' | 'writing' | 'done'>('preview')
+  const [applyResult, setApplyResult] = useState<RootAreaBackfillApplyResult | null>(null)
   const [totalFolders, setTotalFolders] = useState(0)
   const [totalResources, setTotalResources] = useState(0)
   const [changes, setChanges] = useState<RootAreaBackfillRow[]>([])
+
+  const closeModal = () => {
+    setOpen(false)
+    setPhase('preview')
+    setApplyResult(null)
+  }
 
   const handlePreview = async () => {
     setLoading(true)
@@ -408,6 +416,8 @@ function RootAreaBackfillPanel() {
       setTotalFolders(preview.totalFolders)
       setTotalResources(preview.totalResources)
       setChanges(preview.changes)
+      setPhase('preview')
+      setApplyResult(null)
       setOpen(true)
     } catch (err) {
       console.error('Error al previsualizar backfill:', err)
@@ -418,21 +428,24 @@ function RootAreaBackfillPanel() {
   }
 
   const handleApply = async () => {
-    setApplying(true)
+    if (phase === 'writing' || changes.length === 0) return
+
+    const pending = [...changes]
+    setPhase('writing')
     try {
-      const result = await applyRootAreaIdBackfill(changes)
+      const result = await applyRootAreaIdBackfill(pending)
+      setApplyResult(result)
+      setChanges([])
+      setPhase('done')
       toast.success(
         result.errors > 0
           ? `Backfill: ${result.updated} ok, ${result.errors} errores`
           : `Backfill listo: ${result.updated} documentos`,
       )
-      setOpen(false)
-      setChanges([])
     } catch (err) {
       console.error('Error al aplicar backfill:', err)
       toast.error('Falló el backfill')
-    } finally {
-      setApplying(false)
+      setPhase('preview')
     }
   }
 
@@ -460,52 +473,109 @@ function RootAreaBackfillPanel() {
           <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
             <div className="border-b border-neutral-200 px-5 py-4 dark:border-zinc-800">
               <h2 className="text-lg font-bold text-neutral-900 dark:text-gray-100">
-                Dry-run — backfill rootAreaId
+                {phase === 'done'
+                  ? 'Backfill completado'
+                  : phase === 'writing'
+                    ? 'Escribiendo rootAreaId…'
+                    : 'Dry-run — backfill rootAreaId'}
               </h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Carpetas: {totalFolders} · Recursos: {totalResources} · A cambiar: {changes.length}
-              </p>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {changes.length === 0 ? (
-                <p className="text-sm text-neutral-600">Nada pendiente.</p>
-              ) : (
-                <ul className="divide-y divide-neutral-100 text-sm dark:divide-zinc-800">
-                  {changes.map((row) => (
-                    <li key={`${row.collection}-${row.id}`} className="py-2">
-                      <p className="font-medium text-neutral-900 dark:text-gray-100">
-                        [{row.collection}] {row.name}
-                      </p>
-                      <p className="font-mono text-xs text-neutral-400">{row.id}</p>
-                      <p className="text-neutral-600 dark:text-gray-400">
-                        {row.currentRootAreaId} →{' '}
-                        <span className="font-semibold text-brand-primary">
-                          {row.targetRootAreaId}
-                        </span>
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+              {phase === 'preview' && (
+                <p className="mt-1 text-sm text-neutral-500">
+                  Carpetas: {totalFolders} · Recursos: {totalResources} · A cambiar:{' '}
+                  {changes.length}
+                </p>
               )}
             </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {phase === 'writing' && (
+                <div className="flex flex-col items-center justify-center gap-3 py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+                  <p className="text-sm text-neutral-600 dark:text-gray-400">
+                    Aplicando cambios en Firestore…
+                  </p>
+                </div>
+              )}
+              {phase === 'done' && applyResult && (
+                <div className="space-y-3 py-4 text-sm text-neutral-700 dark:text-gray-300">
+                  <p>
+                    Documentos actualizados:{' '}
+                    <span className="font-semibold text-neutral-900 dark:text-gray-100">
+                      {applyResult.updated}
+                    </span>
+                  </p>
+                  {applyResult.failures.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="font-medium text-amber-700 dark:text-amber-300">
+                        Errores: {applyResult.failures.length}
+                      </p>
+                      <ul className="divide-y divide-amber-100 rounded-lg border border-amber-200 bg-amber-50 dark:divide-amber-900/40 dark:border-amber-800 dark:bg-amber-950/30">
+                        {applyResult.failures.map((row) => (
+                          <li key={`${row.collection}-${row.id}`} className="px-3 py-2">
+                            <p className="font-medium text-neutral-900 dark:text-gray-100">
+                              [{row.collection}] {row.name}
+                            </p>
+                            <p className="font-mono text-xs text-neutral-500 dark:text-gray-400">
+                              {row.id}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              {phase === 'preview' &&
+                (changes.length === 0 ? (
+                  <p className="text-sm text-neutral-600">Nada pendiente.</p>
+                ) : (
+                  <ul className="divide-y divide-neutral-100 text-sm dark:divide-zinc-800">
+                    {changes.map((row) => (
+                      <li key={`${row.collection}-${row.id}`} className="py-2">
+                        <p className="font-medium text-neutral-900 dark:text-gray-100">
+                          [{row.collection}] {row.name}
+                        </p>
+                        <p className="font-mono text-xs text-neutral-400">{row.id}</p>
+                        <p className="text-neutral-600 dark:text-gray-400">
+                          {row.currentRootAreaId} →{' '}
+                          <span className="font-semibold text-brand-primary">
+                            {row.targetRootAreaId}
+                          </span>
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+            </div>
             <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-zinc-800">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                disabled={applying}
-                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm dark:border-zinc-600"
-              >
-                Cancelar
-              </button>
-              {changes.length > 0 && (
+              {phase === 'done' ? (
                 <button
                   type="button"
-                  onClick={handleApply}
-                  disabled={applying}
-                  className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  onClick={closeModal}
+                  className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white"
                 >
-                  {applying ? 'Escribiendo…' : 'Confirmar y escribir'}
+                  Cerrar
                 </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    disabled={phase === 'writing'}
+                    className="rounded-lg border border-neutral-300 px-4 py-2 text-sm dark:border-zinc-600 disabled:opacity-60"
+                  >
+                    Cancelar
+                  </button>
+                  {changes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleApply}
+                      disabled={phase === 'writing'}
+                      className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    >
+                      Confirmar y escribir
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -518,7 +588,11 @@ function RootAreaBackfillPanel() {
 export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMode }) {
   const { userProfile } = useAuth()
   const isAreaMode = mode === 'areaAdmin'
-  const managedAreaIds = userProfile?.managedAreaIds ?? []
+  // Evitar `?? []` suelto: nueva referencia cada render → loadContents en loop infinito
+  const managedAreaIds = useMemo(
+    () => userProfile?.managedAreaIds ?? [],
+    [userProfile?.managedAreaIds],
+  )
 
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([
     { id: null, name: isAreaMode ? 'Mis áreas' : 'Raíz' },
@@ -540,6 +614,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
   const currentFolderId = breadcrumb[breadcrumb.length - 1].id
   const atRoot = currentFolderId === null
   const canCreateHere = !isAreaMode || !atRoot
+  const loadGenerationRef = useRef(0)
 
   const assertAreaAccess = useCallback(
     async (folder: Folder): Promise<boolean> => {
@@ -559,10 +634,12 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
   )
 
   const loadContents = useCallback(async () => {
+    const generation = ++loadGenerationRef.current
     setLoading(true)
     try {
       if (isAreaMode && currentFolderId === null) {
         const data = await getFoldersAndItems(null)
+        if (generation !== loadGenerationRef.current) return
         const filtered = data.folders.filter(
           (folder) =>
             Boolean(folder.id) &&
@@ -573,6 +650,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
         setItems([])
       } else if (isAreaMode && currentFolderId) {
         const areaId = await resolveRootAreaIdForFolder(currentFolderId)
+        if (generation !== loadGenerationRef.current) return
         if (!areaId || !isAdminOfArea(userProfile, areaId)) {
           toast.error('No tenés permiso sobre esta área')
           setBreadcrumb([{ id: null, name: 'Mis áreas' }])
@@ -581,20 +659,32 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
           return
         }
         const data = await getFoldersAndItems(currentFolderId)
+        if (generation !== loadGenerationRef.current) return
         setFolders(data.folders)
         setItems(data.items)
       } else {
         const data = await getFoldersAndItems(currentFolderId)
+        if (generation !== loadGenerationRef.current) return
         setFolders(data.folders)
         setItems(data.items)
       }
     } catch (err) {
-      console.error('Error al cargar recursos:', err)
+      if (generation !== loadGenerationRef.current) return
+      const firestoreErr = err as { code?: string; message?: string }
+      console.error('Error al cargar recursos:', {
+        err,
+        code: firestoreErr?.code,
+        message: firestoreErr?.message ?? (err instanceof Error ? err.message : String(err)),
+        currentFolderId,
+        mode: isAreaMode ? 'areaAdmin' : 'super',
+      })
       toast.error('No se pudieron cargar los recursos')
       setFolders([])
       setItems([])
     } finally {
-      setLoading(false)
+      if (generation === loadGenerationRef.current) {
+        setLoading(false)
+      }
     }
   }, [currentFolderId, isAreaMode, managedAreaIds, userProfile])
 
