@@ -309,6 +309,10 @@ export async function deleteFolder(folderId: string): Promise<void> {
   await deleteDoc(doc(db, FOLDERS_COLLECTION, folderId))
 }
 
+export async function deleteResourceItem(itemId: string): Promise<void> {
+  await deleteDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId))
+}
+
 export async function updateFolderPermissions(
   folderId: string,
   allowedUsers: string[],

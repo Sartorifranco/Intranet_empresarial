@@ -8,6 +8,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Trash2,
   X,
 } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,6 +16,8 @@ import toast from 'react-hot-toast'
 import {
   createFolder,
   createResourceItem,
+  deleteFolder,
+  deleteResourceItem,
   getFoldersAndItems,
   isFolderPublic,
   isResourcePublic,
@@ -788,6 +791,56 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
     setPermissionTarget(target)
   }
 
+  /** Super: siempre. Area admin: no carpetas de primer nivel; sí dentro de sus áreas. */
+  const canDeleteFolderRow = (folder: Folder): boolean => {
+    if (!isAreaMode) return true
+    if (folder.parentFolderId === null) return false
+    const areaId = folder.rootAreaId
+    return Boolean(areaId && isAdminOfArea(userProfile, areaId))
+  }
+
+  const canRenameFolderRow = (folder: Folder): boolean => canDeleteFolderRow(folder)
+
+  const canDeleteResourceRow = (item: ResourceItem): boolean => {
+    if (!isAreaMode) return true
+    const areaId = item.rootAreaId
+    return Boolean(areaId && isAdminOfArea(userProfile, areaId))
+  }
+
+  const handleDeleteFolder = async (folder: Folder) => {
+    if (!folder.id || !canDeleteFolderRow(folder)) return
+    if (
+      !window.confirm(
+        `¿Eliminar la carpeta "${folder.name}"?\n\nSolo se puede borrar si está vacía.`,
+      )
+    ) {
+      return
+    }
+    try {
+      await deleteFolder(folder.id)
+      toast.success('Carpeta eliminada')
+      await loadContents()
+    } catch (err) {
+      console.error('Error al eliminar carpeta:', err)
+      toast.error(err instanceof Error ? err.message : 'No se pudo eliminar la carpeta')
+    }
+  }
+
+  const handleDeleteResource = async (item: ResourceItem) => {
+    if (!item.id || !canDeleteResourceRow(item)) return
+    if (!window.confirm(`¿Eliminar el recurso "${item.name}"? Esta acción no se puede deshacer.`)) {
+      return
+    }
+    try {
+      await deleteResourceItem(item.id)
+      toast.success('Recurso eliminado')
+      await loadContents()
+    } catch (err) {
+      console.error('Error al eliminar recurso:', err)
+      toast.error(err instanceof Error ? err.message : 'No se pudo eliminar el recurso')
+    }
+  }
+
   const isEmpty = !loading && folders.length === 0 && items.length === 0
 
   return (
@@ -1007,17 +1060,19 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setEditTarget({ kind: 'folder', item: folder })
-                          }}
-                          aria-label={`Editar ${folder.name}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-neutral-100 dark:bg-zinc-800 hover:text-neutral-900 dark:text-gray-100"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                        {canRenameFolderRow(folder) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditTarget({ kind: 'folder', item: folder })
+                            }}
+                            aria-label={`Editar ${folder.name}`}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-neutral-100 dark:bg-zinc-800 hover:text-neutral-900 dark:text-gray-100"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1029,6 +1084,19 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                         >
                           <KeyRound className="h-4 w-4" />
                         </button>
+                        {canDeleteFolderRow(folder) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              void handleDeleteFolder(folder)
+                            }}
+                            aria-label={`Eliminar ${folder.name}`}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1082,6 +1150,16 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                         >
                           <KeyRound className="h-4 w-4" />
                         </button>
+                        {canDeleteResourceRow(item) && (
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteResource(item)}
+                            aria-label={`Eliminar ${item.name}`}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
