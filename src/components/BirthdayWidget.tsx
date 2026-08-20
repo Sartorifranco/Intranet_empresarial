@@ -1,8 +1,6 @@
 import { Cake, Gift } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from '../context'
 import { getContacts, type EmployeeContact } from '../services/contactService'
-import { getAllUsers, type UserProfile } from '../services/userService'
 
 interface BirthdayEntry {
   id: string
@@ -11,33 +9,20 @@ interface BirthdayEntry {
   birthdate: string
 }
 
-function mergeBirthdaySources(
-  contacts: EmployeeContact[],
-  users: UserProfile[],
-): BirthdayEntry[] {
-  const byEmail = new Map<string, BirthdayEntry>()
-
-  for (const contact of contacts) {
-    if (!contact.birthdate) continue
-    byEmail.set(contact.email.toLowerCase(), {
+/**
+ * Fuente única de cumpleaños: colección `contacts` (lectura pública).
+ * Nota: cada usuario nuevo de la Intranet también necesita su registro en
+ * `contacts` con `birthdate`; si no, el widget lo ignora en silencio.
+ */
+function contactsToBirthdayEntries(contacts: EmployeeContact[]): BirthdayEntry[] {
+  return contacts
+    .filter((contact) => Boolean(contact.birthdate))
+    .map((contact) => ({
       id: contact.id ?? contact.email,
       name: contact.name,
       department: contact.department,
-      birthdate: contact.birthdate,
-    })
-  }
-
-  for (const profile of users) {
-    if (!profile.birthDate) continue
-    byEmail.set(profile.email.toLowerCase(), {
-      id: profile.uid,
-      name: profile.displayName,
-      department: profile.department,
-      birthdate: profile.birthDate,
-    })
-  }
-
-  return Array.from(byEmail.values())
+      birthdate: contact.birthdate!,
+    }))
 }
 
 function getBirthdayDay(birthdate: string): number {
@@ -77,7 +62,6 @@ export function BirthdayWidget({
 }: {
   variant?: 'default' | 'minimal' | 'hub'
 }) {
-  const { user } = useAuth()
   const [entries, setEntries] = useState<BirthdayEntry[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -89,18 +73,8 @@ export function BirthdayWidget({
 
       try {
         const contacts = await getContacts()
-        let users: UserProfile[] = []
-
-        if (user) {
-          try {
-            users = await getAllUsers()
-          } catch (err) {
-            console.warn('No se pudieron cargar cumpleaños desde usuarios:', err)
-          }
-        }
-
         if (!cancelled) {
-          setEntries(mergeBirthdaySources(contacts, users))
+          setEntries(contactsToBirthdayEntries(contacts))
         }
       } catch (err) {
         console.error('Error al cargar cumpleaños:', err)
@@ -115,7 +89,7 @@ export function BirthdayWidget({
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [])
 
   const birthdaysThisMonth = useMemo(() => {
     return entries
