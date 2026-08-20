@@ -10,6 +10,7 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
   type DocumentData,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -22,6 +23,8 @@ export interface Folder {
   name: string
   parentFolderId: string | null
   allowedUsers: string[]
+  /** Id de la carpeta de primer nivel a la que pertenece. */
+  rootAreaId?: string
   createdAt: Timestamp | Date
 }
 
@@ -32,12 +35,21 @@ export interface ResourceItem {
   type: 'folder' | 'drive' | 'form' | 'link'
   folderId: string | null
   allowedUsers: string[]
+  rootAreaId?: string
   createdAt: Timestamp | Date
 }
 
 export interface FolderLevelContents {
   folders: Folder[]
   items: ResourceItem[]
+}
+
+export interface RootAreaBackfillRow {
+  collection: 'folders' | 'resourceItems'
+  id: string
+  name: string
+  currentRootAreaId: string | '(sin rootAreaId)'
+  targetRootAreaId: string
 }
 
 function toDate(value: Timestamp | Date): Date {
@@ -56,6 +68,7 @@ function mapDocToFolder(id: string, data: DocumentData): Folder {
     name: data.name ?? '',
     parentFolderId: (data.parentFolderId as string | null) ?? null,
     allowedUsers: normalizeAllowedUsers(data),
+    rootAreaId: typeof data.rootAreaId === 'string' ? data.rootAreaId : undefined,
     createdAt: data.createdAt ? toDate(data.createdAt as Timestamp) : new Date(),
   }
 }
@@ -68,6 +81,7 @@ function mapDocToResourceItem(id: string, data: DocumentData): ResourceItem {
     type: (data.type as ResourceItem['type']) ?? 'link',
     folderId: (data.folderId as string | null) ?? null,
     allowedUsers: normalizeAllowedUsers(data),
+    rootAreaId: typeof data.rootAreaId === 'string' ? data.rootAreaId : undefined,
     createdAt: data.createdAt ? toDate(data.createdAt as Timestamp) : new Date(),
   }
 }
@@ -163,33 +177,106 @@ export async function getFoldersAndItems(
   return { folders, items }
 }
 
+/** Resuelve el rootAreaId subiendo padres (o el propio id si es raíz). */
+export async function resolveRootAreaIdForFolder(
+  folderId: string,
+): Promise<string | null> {
+  const visited = new Set<string>()
+  let currentId: string | null = folderId
+
+  while (currentId) {
+    if (visited.has(currentId)) return null
+    visited.add(currentId)
+
+    const folder = await getFolderById(currentId)
+    if (!folder) return null
+
+    if (folder.rootAreaId) return folder.rootAreaId
+    if (folder.parentFolderId === null) return folder.id ?? currentId
+
+    currentId = folder.parentFolderId
+  }
+
+  return null
+}
+
 export async function createFolder(
   name: string,
   parentFolderId: string | null,
   allowedUsers: string[] = [],
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, FOLDERS_COLLECTION), {
+  let rootAreaId: string | undefined
+
+  if (parentFolderId) {
+    const parent = await getFolderById(parentFolderId)
+    if (!parent) {
+      throw new Error('Carpeta padre no encontrada')
+    }
+    rootAreaId =
+      parent.rootAreaId ??
+      (parent.parentFolderId === null ? parent.id : undefined) ??
+      (await resolveRootAreaIdForFolder(parentFolderId)) ??
+      undefined
+
+    if (!rootAreaId) {
+      throw new Error(
+        'La carpeta padre no tiene rootAreaId. Pedile a un Super Admin que corra el backfill.',
+      )
+    }
+  }
+
+  const payload: Record<string, unknown> = {
     name: name.trim(),
     parentFolderId,
     allowedUsers,
     createdAt: serverTimestamp(),
-  })
+  }
+
+  if (rootAreaId) {
+    payload.rootAreaId = rootAreaId
+  }
+
+  const docRef = await addDoc(collection(db, FOLDERS_COLLECTION), payload)
+
+  // Carpeta de primer nivel: rootAreaId = su propio id
+  if (!parentFolderId) {
+    await updateDoc(docRef, { rootAreaId: docRef.id })
+  }
 
   return docRef.id
 }
 
 export async function createResourceItem(
-  data: Omit<ResourceItem, 'id' | 'createdAt'>,
+  data: Omit<ResourceItem, 'id' | 'createdAt' | 'rootAreaId'> & {
+    rootAreaId?: string
+  },
 ): Promise<string> {
-  const docRef = await addDoc(collection(db, RESOURCE_ITEMS_COLLECTION), {
+  let rootAreaId = data.rootAreaId
+
+  if (!rootAreaId && data.folderId) {
+    rootAreaId = (await resolveRootAreaIdForFolder(data.folderId)) ?? undefined
+  }
+
+  if (data.folderId && !rootAreaId) {
+    throw new Error(
+      'No se pudo resolver rootAreaId del padre. Pedile a un Super Admin que corra el backfill.',
+    )
+  }
+
+  const payload: Record<string, unknown> = {
     name: data.name.trim(),
     url: data.url.trim(),
     type: data.type,
     folderId: data.folderId,
     allowedUsers: data.allowedUsers ?? [],
     createdAt: serverTimestamp(),
-  })
+  }
 
+  if (rootAreaId) {
+    payload.rootAreaId = rootAreaId
+  }
+
+  const docRef = await addDoc(collection(db, RESOURCE_ITEMS_COLLECTION), payload)
   return docRef.id
 }
 
@@ -215,6 +302,7 @@ export async function updateFolderPermissions(
   folderId: string,
   allowedUsers: string[],
 ): Promise<void> {
+  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
   await updateDoc(doc(db, FOLDERS_COLLECTION, folderId), {
     allowedUsers,
   })
@@ -241,6 +329,7 @@ export async function updateResourcePermissions(
   itemId: string,
   allowedUsers: string[],
 ): Promise<void> {
+  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
   await updateDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId), {
     allowedUsers,
   })
@@ -254,4 +343,118 @@ export async function getFolderById(folderId: string): Promise<Folder | null> {
   }
 
   return mapDocToFolder(snapshot.id, snapshot.data())
+}
+
+// TEMPORAL: borrar después de correr el backfill una sola vez
+export async function previewRootAreaIdBackfill(): Promise<{
+  totalFolders: number
+  totalResources: number
+  changes: RootAreaBackfillRow[]
+}> {
+  const [foldersSnap, resourcesSnap] = await Promise.all([
+    getDocs(collection(db, FOLDERS_COLLECTION)),
+    getDocs(collection(db, RESOURCE_ITEMS_COLLECTION)),
+  ])
+
+  const folders = foldersSnap.docs.map((d) => mapDocToFolder(d.id, d.data()))
+  const byId = new Map(folders.map((f) => [f.id!, f]))
+
+  function resolveFromMap(folderId: string): string | null {
+    const visited = new Set<string>()
+    let currentId: string | null = folderId
+    while (currentId) {
+      if (visited.has(currentId)) return null
+      visited.add(currentId)
+      const folder = byId.get(currentId)
+      if (!folder) return null
+      if (folder.parentFolderId === null) return folder.id ?? currentId
+      currentId = folder.parentFolderId
+    }
+    return null
+  }
+
+  const changes: RootAreaBackfillRow[] = []
+
+  for (const folder of folders) {
+    if (!folder.id) continue
+    const target = resolveFromMap(folder.id)
+    if (!target) continue
+    const current = folder.rootAreaId ?? '(sin rootAreaId)'
+    if (current !== target) {
+      changes.push({
+        collection: 'folders',
+        id: folder.id,
+        name: folder.name,
+        currentRootAreaId: current,
+        targetRootAreaId: target,
+      })
+    }
+  }
+
+  for (const docSnap of resourcesSnap.docs) {
+    const item = mapDocToResourceItem(docSnap.id, docSnap.data())
+    if (!item.folderId) continue
+    const target = resolveFromMap(item.folderId)
+    if (!target) continue
+    const current = item.rootAreaId ?? '(sin rootAreaId)'
+    if (current !== target) {
+      changes.push({
+        collection: 'resourceItems',
+        id: docSnap.id,
+        name: item.name,
+        currentRootAreaId: current,
+        targetRootAreaId: target,
+      })
+    }
+  }
+
+  return {
+    totalFolders: foldersSnap.size,
+    totalResources: resourcesSnap.size,
+    changes,
+  }
+}
+
+// TEMPORAL: borrar después de correr el backfill una sola vez
+export async function applyRootAreaIdBackfill(
+  changes: RootAreaBackfillRow[],
+): Promise<{ updated: number; errors: number }> {
+  let updated = 0
+  let errors = 0
+  const CHUNK = 400
+
+  for (let i = 0; i < changes.length; i += CHUNK) {
+    const chunk = changes.slice(i, i + CHUNK)
+    const batch = writeBatch(db)
+
+    for (const row of chunk) {
+      const collectionName =
+        row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
+      batch.update(doc(db, collectionName, row.id), {
+        rootAreaId: row.targetRootAreaId,
+      })
+    }
+
+    try {
+      await batch.commit()
+      updated += chunk.length
+    } catch (err) {
+      console.error('Error en batch de backfill rootAreaId:', err)
+      for (const row of chunk) {
+        try {
+          const collectionName =
+            row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
+          await updateDoc(doc(db, collectionName, row.id), {
+            rootAreaId: row.targetRootAreaId,
+          })
+          updated += 1
+        } catch (rowErr) {
+          errors += 1
+          console.error(`Error backfill ${row.collection}/${row.id}:`, rowErr)
+        }
+      }
+    }
+  }
+
+  return { updated, errors }
 }
