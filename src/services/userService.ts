@@ -18,13 +18,26 @@ const USERS_COLLECTION = 'users'
 
 export type UserDepartment = string
 
+export type UserRole = 'super_admin' | 'admin' | 'user'
+
+/**
+ * @deprecated Reemplazado por `role` (+ `managedAreaIds` para admins de área).
+ * Se mantiene por compatibilidad con código que aún lee flags booleanos.
+ */
 export interface UserPermissions {
+  /** @deprecated Usar `role` / `isUser` / helpers de rol. */
   view_directory: boolean
+  /** @deprecated Usar `role` / helpers de rol. */
   view_drive: boolean
+  /** @deprecated Usar `role` / helpers de rol. */
   view_links: boolean
+  /** @deprecated Usar `role` / helpers de rol. */
   manage_news: boolean
+  /** @deprecated Usar `role` / helpers de rol. */
   manage_links: boolean
+  /** @deprecated Usar `role` / helpers de rol. */
   manage_users: boolean
+  /** @deprecated Usar `role === 'super_admin'` / `isSuperAdmin(profile)`. */
   super_admin: boolean
 }
 
@@ -33,11 +46,18 @@ export interface UserProfile {
   email: string
   displayName: string
   department: UserDepartment
+  role: UserRole
+  /** Solo aplica si role === 'admin'. IDs de carpetas de primer nivel / áreas. */
+  managedAreaIds?: string[]
+  /**
+   * @deprecated Reemplazado por `role`. Se mantiene por compatibilidad.
+   */
   permissions: UserPermissions
   favoriteApps: string[]
   birthDate?: string
 }
 
+/** @deprecated Preferir `role: 'user'`. Se mantiene por compatibilidad. */
 export const DEFAULT_PERMISSIONS: UserPermissions = {
   view_directory: true,
   view_drive: true,
@@ -53,6 +73,7 @@ export const SUPER_ADMIN_EMAILS = [
   'sistemas.ti@bacarsa.com.ar',
 ] as const
 
+/** @deprecated Preferir `role: 'super_admin'`. Se mantiene por compatibilidad. */
 export const SUPER_ADMIN_PERMISSIONS: UserPermissions = {
   view_directory: true,
   view_drive: true,
@@ -63,24 +84,70 @@ export const SUPER_ADMIN_PERMISSIONS: UserPermissions = {
   super_admin: true,
 }
 
+const VALID_ROLES: readonly UserRole[] = ['super_admin', 'admin', 'user']
+
 export function isSuperAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false
   const normalized = email.trim().toLowerCase()
   return SUPER_ADMIN_EMAILS.some((adminEmail) => adminEmail === normalized)
 }
 
+/** @deprecated Preferir `role` en el perfil. Sigue devolviendo flags booleanos. */
 export function getPermissionsForEmail(email: string | null | undefined): UserPermissions {
   return isSuperAdminEmail(email) ? SUPER_ADMIN_PERMISSIONS : DEFAULT_PERMISSIONS
 }
 
-function mapDocToUserProfile(uid: string, data: DocumentData): UserProfile {
+export function resolveRoleForEmail(email: string | null | undefined): UserRole {
+  return isSuperAdminEmail(email) ? 'super_admin' : 'user'
+}
+
+function isValidRole(value: unknown): value is UserRole {
+  return typeof value === 'string' && (VALID_ROLES as readonly string[]).includes(value)
+}
+
+/** Deriva el role desde el documento (con fallback hasta que corra la migración). */
+export function resolveRoleFromUserData(data: DocumentData): UserRole {
+  if (isValidRole(data.role)) {
+    return data.role
+  }
+
+  const email = typeof data.email === 'string' ? data.email : ''
   const permissions = data.permissions ?? {}
 
-  return {
+  if (isSuperAdminEmail(email) || permissions.super_admin === true) {
+    return 'super_admin'
+  }
+
+  return 'user'
+}
+
+export function isSuperAdmin(profile: UserProfile | null | undefined): boolean {
+  return profile?.role === 'super_admin'
+}
+
+export function isAdminOfArea(
+  profile: UserProfile | null | undefined,
+  areaId: string,
+): boolean {
+  if (!profile || profile.role !== 'admin' || !areaId) return false
+  return Array.isArray(profile.managedAreaIds) && profile.managedAreaIds.includes(areaId)
+}
+
+export function isUser(profile: UserProfile | null | undefined): boolean {
+  if (!profile) return true
+  return profile.role === 'user'
+}
+
+function mapDocToUserProfile(uid: string, data: DocumentData): UserProfile {
+  const permissions = data.permissions ?? {}
+  const role = resolveRoleFromUserData(data)
+
+  const profile: UserProfile = {
     uid,
     email: data.email ?? '',
     displayName: data.displayName ?? '',
     department: (data.department as UserDepartment) ?? 'General',
+    role,
     permissions: {
       view_directory: permissions.view_directory ?? DEFAULT_PERMISSIONS.view_directory,
       view_drive: permissions.view_drive ?? DEFAULT_PERMISSIONS.view_drive,
@@ -95,6 +162,14 @@ function mapDocToUserProfile(uid: string, data: DocumentData): UserProfile {
       : [],
     birthDate: typeof data.birthDate === 'string' ? data.birthDate : undefined,
   }
+
+  if (role === 'admin' && Array.isArray(data.managedAreaIds)) {
+    profile.managedAreaIds = (data.managedAreaIds as unknown[]).filter(
+      (id): id is string => typeof id === 'string' && id.length > 0,
+    )
+  }
+
+  return profile
 }
 
 export async function registerUser(
@@ -114,6 +189,7 @@ export async function registerUser(
     displayName: name.trim(),
     department,
     birthDate,
+    role: resolveRoleForEmail(email),
     permissions: getPermissionsForEmail(email),
     favoriteApps: [],
   })
@@ -121,6 +197,10 @@ export async function registerUser(
   return uid
 }
 
+/**
+ * Crea el perfil de Firestore solo si no existe.
+ * Nunca actualiza `role` (ni otros campos) de un documento existente.
+ */
 export async function ensureGoogleUserProfile(user: User): Promise<void> {
   const userRef = doc(db, USERS_COLLECTION, user.uid)
   const snapshot = await getDoc(userRef)
@@ -136,11 +216,16 @@ export async function ensureGoogleUserProfile(user: User): Promise<void> {
       user.email?.split('@')[0] ||
       'Usuario',
     department: 'General',
+    role: resolveRoleForEmail(user.email),
     permissions: getPermissionsForEmail(user.email),
     favoriteApps: [],
   })
 }
 
+/**
+ * Solo para emails en SUPER_ADMIN_EMAILS.
+ * Puede setear `role: 'super_admin'` si falta; no toca ni degrada `admin` / `user`.
+ */
 export async function ensureSuperAdminPermissions(
   uid: string,
   email: string | null | undefined,
@@ -152,18 +237,26 @@ export async function ensureSuperAdminPermissions(
 
   if (!snapshot.exists()) return
 
-  const current = snapshot.data().permissions ?? {}
-  const needsUpdate =
+  const data = snapshot.data()
+  const current = data.permissions ?? {}
+  const needsPermissionUpdate =
     current.super_admin !== true ||
     current.manage_users !== true ||
     current.manage_news !== true ||
     current.manage_links !== true
+  const needsRoleUpdate = data.role !== 'super_admin'
 
-  if (!needsUpdate) return
+  if (!needsPermissionUpdate && !needsRoleUpdate) return
 
-  await updateDoc(userRef, {
-    permissions: SUPER_ADMIN_PERMISSIONS,
-  })
+  const patch: Record<string, unknown> = {}
+  if (needsPermissionUpdate) {
+    patch.permissions = SUPER_ADMIN_PERMISSIONS
+  }
+  if (needsRoleUpdate) {
+    patch.role = 'super_admin'
+  }
+
+  await updateDoc(userRef, patch)
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -259,4 +352,54 @@ export function canManageDirectory(
 /** Turnos: solo los dos perfiles administradores (sistemas.ti y admin). */
 export function canManageShifts(email: string | null | undefined): boolean {
   return isSuperAdminEmail(email)
+}
+
+/**
+ * Actualiza role a 'admin' | 'user'. Nunca permite 'super_admin' (solo Firestore Console).
+ */
+export async function updateUserRole(
+  uid: string,
+  role: 'admin' | 'user',
+): Promise<void> {
+  if (role !== 'admin' && role !== 'user') {
+    throw new Error('updateUserRole solo acepta "admin" o "user"')
+  }
+
+  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  const patch: Record<string, unknown> = { role }
+  if (role === 'user') {
+    patch.managedAreaIds = []
+  }
+
+  await updateDoc(doc(db, USERS_COLLECTION, uid), patch)
+}
+
+/**
+ * Actualiza managedAreaIds. Solo válido si el usuario ya tiene role === 'admin'.
+ */
+export async function updateManagedAreaIds(
+  uid: string,
+  areaIds: string[],
+): Promise<void> {
+  const snapshot = await getDoc(doc(db, USERS_COLLECTION, uid))
+  if (!snapshot.exists()) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  const currentRole = snapshot.data().role
+  if (currentRole !== 'admin') {
+    throw new Error(
+      'updateManagedAreaIds solo aplica a usuarios con role "admin"',
+    )
+  }
+
+  const cleaned = areaIds
+    .filter((id): id is string => typeof id === 'string')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0)
+
+  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  await updateDoc(doc(db, USERS_COLLECTION, uid), {
+    managedAreaIds: cleaned,
+  })
 }
