@@ -31,6 +31,13 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.super_admin == true;
     }
 
+    // Admin de área (role explícito). Necesita listar users para asignar carpetas (Fase 2).
+    function isAreaAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     function canManageContent() {
       return isAdmin() || isSuperAdmin();
     }
@@ -40,9 +47,17 @@ service cloud.firestore {
     }
 
     // Perfiles de usuario y permisos
+    // get: propio doc, o Super Admin / Admin de área / emails hardcodeados
+    // list: solo Super Admin / Admin de área / emails hardcodeados (no usuarios comunes)
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow list: if isAuthenticated();
+      allow get: if isAuthenticated()
+        && (
+          request.auth.uid == userId
+          || isSuperAdmin()
+          || isAreaAdmin()
+          || isAdmin()
+        );
+      allow list: if isSuperAdmin() || isAreaAdmin() || isAdmin();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if canManageUsers() || isAdmin()
         || (isAuthenticated() && request.auth.uid == userId && onlyFavoriteAppsUpdate());
