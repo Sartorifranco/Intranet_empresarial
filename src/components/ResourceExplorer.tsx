@@ -18,14 +18,24 @@ import {
   getFoldersAndItems,
   isFolderPublic,
   isResourcePublic,
+  resolveRootAreaIdForFolder,
+  getFolderById,
   updateFolderName,
   updateResourceItem,
   updateFolderPermissions,
   updateResourcePermissions,
+  previewRootAreaIdBackfill,
+  applyRootAreaIdBackfill,
   type Folder,
   type ResourceItem,
+  type RootAreaBackfillRow,
 } from '../services/folderService'
-import { getAllUsers, type UserProfile } from '../services/userService'
+import {
+  getAllUsers,
+  isAdminOfArea,
+  type UserProfile,
+} from '../services/userService'
+import { useAuth } from '../context'
 
 type BreadcrumbItem = { id: string | null; name: string }
 
@@ -380,8 +390,139 @@ function EditModal({ target, onClose, onSaved }: EditModalProps) {
   )
 }
 
-export function ResourceExplorer() {
-  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([{ id: null, name: 'Raíz' }])
+export type ResourceExplorerMode = 'super' | 'areaAdmin'
+
+// TEMPORAL: borrar después de correr el backfill una sola vez
+function RootAreaBackfillPanel() {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [applying, setApplying] = useState(false)
+  const [totalFolders, setTotalFolders] = useState(0)
+  const [totalResources, setTotalResources] = useState(0)
+  const [changes, setChanges] = useState<RootAreaBackfillRow[]>([])
+
+  const handlePreview = async () => {
+    setLoading(true)
+    try {
+      const preview = await previewRootAreaIdBackfill()
+      setTotalFolders(preview.totalFolders)
+      setTotalResources(preview.totalResources)
+      setChanges(preview.changes)
+      setOpen(true)
+    } catch (err) {
+      console.error('Error al previsualizar backfill:', err)
+      toast.error('No se pudo previsualizar el backfill')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApply = async () => {
+    setApplying(true)
+    try {
+      const result = await applyRootAreaIdBackfill(changes)
+      toast.success(
+        result.errors > 0
+          ? `Backfill: ${result.updated} ok, ${result.errors} errores`
+          : `Backfill listo: ${result.updated} documentos`,
+      )
+      setOpen(false)
+      setChanges([])
+    } catch (err) {
+      console.error('Error al aplicar backfill:', err)
+      toast.error('Falló el backfill')
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="mb-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          Temporal — backfill rootAreaId
+        </p>
+        <p className="mt-1 text-sm text-amber-900/80 dark:text-amber-200/80">
+          Asigna rootAreaId a carpetas/recursos viejos. Dry-run primero; escribe solo al confirmar.
+        </p>
+        <button
+          type="button"
+          onClick={handlePreview}
+          disabled={loading}
+          className="mt-3 rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-900 disabled:opacity-60 dark:border-amber-700 dark:bg-zinc-900 dark:text-amber-200"
+        >
+          {loading ? 'Analizando…' : 'Backfill rootAreaId (una sola vez)'}
+        </button>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
+            <div className="border-b border-neutral-200 px-5 py-4 dark:border-zinc-800">
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-gray-100">
+                Dry-run — backfill rootAreaId
+              </h2>
+              <p className="mt-1 text-sm text-neutral-500">
+                Carpetas: {totalFolders} · Recursos: {totalResources} · A cambiar: {changes.length}
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {changes.length === 0 ? (
+                <p className="text-sm text-neutral-600">Nada pendiente.</p>
+              ) : (
+                <ul className="divide-y divide-neutral-100 text-sm dark:divide-zinc-800">
+                  {changes.map((row) => (
+                    <li key={`${row.collection}-${row.id}`} className="py-2">
+                      <p className="font-medium text-neutral-900 dark:text-gray-100">
+                        [{row.collection}] {row.name}
+                      </p>
+                      <p className="font-mono text-xs text-neutral-400">{row.id}</p>
+                      <p className="text-neutral-600 dark:text-gray-400">
+                        {row.currentRootAreaId} →{' '}
+                        <span className="font-semibold text-brand-primary">
+                          {row.targetRootAreaId}
+                        </span>
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={applying}
+                className="rounded-lg border border-neutral-300 px-4 py-2 text-sm dark:border-zinc-600"
+              >
+                Cancelar
+              </button>
+              {changes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  disabled={applying}
+                  className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {applying ? 'Escribiendo…' : 'Confirmar y escribir'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMode }) {
+  const { userProfile } = useAuth()
+  const isAreaMode = mode === 'areaAdmin'
+  const managedAreaIds = userProfile?.managedAreaIds ?? []
+
+  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([
+    { id: null, name: isAreaMode ? 'Mis áreas' : 'Raíz' },
+  ])
   const [folders, setFolders] = useState<Folder[]>([])
   const [items, setItems] = useState<ResourceItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -397,13 +538,56 @@ export function ResourceExplorer() {
   const [submitting, setSubmitting] = useState(false)
 
   const currentFolderId = breadcrumb[breadcrumb.length - 1].id
+  const atRoot = currentFolderId === null
+  const canCreateHere = !isAreaMode || !atRoot
+
+  const assertAreaAccess = useCallback(
+    async (folder: Folder): Promise<boolean> => {
+      if (!isAreaMode) return true
+      const areaId =
+        folder.rootAreaId ??
+        (folder.parentFolderId === null ? folder.id : null) ??
+        (folder.id ? await resolveRootAreaIdForFolder(folder.id) : null)
+
+      if (!areaId || !isAdminOfArea(userProfile, areaId)) {
+        toast.error('No tenés permiso sobre esta área')
+        return false
+      }
+      return true
+    },
+    [isAreaMode, userProfile],
+  )
 
   const loadContents = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await getFoldersAndItems(currentFolderId)
-      setFolders(data.folders)
-      setItems(data.items)
+      if (isAreaMode && currentFolderId === null) {
+        const data = await getFoldersAndItems(null)
+        const filtered = data.folders.filter(
+          (folder) =>
+            Boolean(folder.id) &&
+            managedAreaIds.includes(folder.id!) &&
+            isAdminOfArea(userProfile, folder.id!),
+        )
+        setFolders(filtered)
+        setItems([])
+      } else if (isAreaMode && currentFolderId) {
+        const areaId = await resolveRootAreaIdForFolder(currentFolderId)
+        if (!areaId || !isAdminOfArea(userProfile, areaId)) {
+          toast.error('No tenés permiso sobre esta área')
+          setBreadcrumb([{ id: null, name: 'Mis áreas' }])
+          setFolders([])
+          setItems([])
+          return
+        }
+        const data = await getFoldersAndItems(currentFolderId)
+        setFolders(data.folders)
+        setItems(data.items)
+      } else {
+        const data = await getFoldersAndItems(currentFolderId)
+        setFolders(data.folders)
+        setItems(data.items)
+      }
     } catch (err) {
       console.error('Error al cargar recursos:', err)
       toast.error('No se pudieron cargar los recursos')
@@ -412,14 +596,16 @@ export function ResourceExplorer() {
     } finally {
       setLoading(false)
     }
-  }, [currentFolderId])
+  }, [currentFolderId, isAreaMode, managedAreaIds, userProfile])
 
   useEffect(() => {
     loadContents()
   }, [loadContents])
 
-  const enterFolder = (folder: Folder) => {
+  const enterFolder = async (folder: Folder) => {
     if (!folder.id) return
+    const ok = await assertAreaAccess(folder)
+    if (!ok) return
     setBreadcrumb((prev) => [...prev, { id: folder.id!, name: folder.name }])
   }
 
@@ -439,6 +625,10 @@ export function ResourceExplorer() {
   const handleCreateFolder = async (e: FormEvent) => {
     e.preventDefault()
     if (!folderName.trim()) return
+    if (isAreaMode && atRoot) {
+      toast.error('No podés crear carpetas de primer nivel')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -449,7 +639,7 @@ export function ResourceExplorer() {
       await loadContents()
     } catch (err) {
       console.error('Error al crear carpeta:', err)
-      toast.error('No se pudo crear la carpeta')
+      toast.error(err instanceof Error ? err.message : 'No se pudo crear la carpeta')
     } finally {
       setSubmitting(false)
     }
@@ -458,6 +648,10 @@ export function ResourceExplorer() {
   const handleCreateResource = async (e: FormEvent) => {
     e.preventDefault()
     if (!resourceName.trim() || !resourceUrl.trim()) return
+    if (isAreaMode && atRoot) {
+      toast.error('Entrá a un área para crear recursos')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -476,16 +670,41 @@ export function ResourceExplorer() {
       await loadContents()
     } catch (err) {
       console.error('Error al crear recurso:', err)
-      toast.error('No se pudo crear el recurso')
+      toast.error(err instanceof Error ? err.message : 'No se pudo crear el recurso')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const openPermissions = async (target: PermissionTarget) => {
+    if (isAreaMode) {
+      const folder =
+        target.kind === 'folder'
+          ? target.item
+          : target.item.folderId
+            ? await getFolderById(target.item.folderId)
+            : null
+      if (folder) {
+        const ok = await assertAreaAccess(folder)
+        if (!ok) return
+      } else if (target.kind === 'resource') {
+        const areaId = target.item.rootAreaId
+        if (!areaId || !isAdminOfArea(userProfile, areaId)) {
+          toast.error('No tenés permiso sobre este recurso')
+          return
+        }
+      }
+    }
+    setPermissionTarget(target)
   }
 
   const isEmpty = !loading && folders.length === 0 && items.length === 0
 
   return (
     <div className="w-full">
+      {/* TEMPORAL: borrar después de correr el backfill una sola vez */}
+      {mode === 'super' && <RootAreaBackfillPanel />}
+
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <nav
           aria-label="Ruta de navegación"
@@ -509,30 +728,32 @@ export function ResourceExplorer() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setShowResourceForm(false)
-              setShowFolderForm(true)
-            }}
-            className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium text-neutral-800 dark:text-gray-100 transition-colors hover:border-neutral-400 dark:hover:border-zinc-500 hover:bg-neutral-50 dark:bg-zinc-950"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva carpeta
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowFolderForm(false)
-              setShowResourceForm(true)
-            }}
-            className="btn-primary inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo recurso
-          </button>
-        </div>
+        {canCreateHere && (
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowResourceForm(false)
+                setShowFolderForm(true)
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2 text-sm font-medium text-neutral-800 dark:text-gray-100 transition-colors hover:border-neutral-400 dark:hover:border-zinc-500 hover:bg-neutral-50 dark:bg-zinc-950"
+            >
+              <Plus className="h-4 w-4" />
+              Nueva carpeta
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowFolderForm(false)
+                setShowResourceForm(true)
+              }}
+              className="btn-primary inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo recurso
+            </button>
+          </div>
+        )}
       </div>
 
       {showFolderForm && (
@@ -711,7 +932,7 @@ export function ResourceExplorer() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setPermissionTarget({ kind: 'folder', item: folder })
+                            openPermissions({ kind: 'folder', item: folder })
                           }}
                           aria-label={`Permisos de ${folder.name}`}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary"
@@ -765,7 +986,7 @@ export function ResourceExplorer() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setPermissionTarget({ kind: 'resource', item })}
+                          onClick={() => openPermissions({ kind: 'resource', item })}
                           aria-label={`Permisos de ${item.name}`}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary"
                         >
