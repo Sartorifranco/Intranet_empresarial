@@ -27,12 +27,8 @@ import {
   updateResourceItem,
   updateFolderPermissions,
   updateResourcePermissions,
-  previewRootAreaIdBackfill,
-  applyRootAreaIdBackfill,
   type Folder,
   type ResourceItem,
-  type RootAreaBackfillRow,
-  type RootAreaBackfillApplyResult,
 } from '../services/folderService'
 import {
   getAllUsers,
@@ -396,198 +392,6 @@ function EditModal({ target, onClose, onSaved }: EditModalProps) {
 
 export type ResourceExplorerMode = 'super' | 'areaAdmin'
 
-// TEMPORAL: borrar después de correr el backfill una sola vez
-function RootAreaBackfillPanel() {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [phase, setPhase] = useState<'preview' | 'writing' | 'done'>('preview')
-  const [applyResult, setApplyResult] = useState<RootAreaBackfillApplyResult | null>(null)
-  const [totalFolders, setTotalFolders] = useState(0)
-  const [totalResources, setTotalResources] = useState(0)
-  const [changes, setChanges] = useState<RootAreaBackfillRow[]>([])
-
-  const closeModal = () => {
-    setOpen(false)
-    setPhase('preview')
-    setApplyResult(null)
-  }
-
-  const handlePreview = async () => {
-    setLoading(true)
-    try {
-      const preview = await previewRootAreaIdBackfill()
-      setTotalFolders(preview.totalFolders)
-      setTotalResources(preview.totalResources)
-      setChanges(preview.changes)
-      setPhase('preview')
-      setApplyResult(null)
-      setOpen(true)
-    } catch (err) {
-      console.error('Error al previsualizar backfill:', err)
-      toast.error('No se pudo previsualizar el backfill')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleApply = async () => {
-    if (phase === 'writing' || changes.length === 0) return
-
-    const pending = [...changes]
-    setPhase('writing')
-    try {
-      const result = await applyRootAreaIdBackfill(pending)
-      setApplyResult(result)
-      setChanges([])
-      setPhase('done')
-      toast.success(
-        result.errors > 0
-          ? `Backfill: ${result.updated} ok, ${result.errors} errores`
-          : `Backfill listo: ${result.updated} documentos`,
-      )
-    } catch (err) {
-      console.error('Error al aplicar backfill:', err)
-      toast.error('Falló el backfill')
-      setPhase('preview')
-    }
-  }
-
-  return (
-    <>
-      <div className="mb-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-          Temporal — backfill rootAreaId
-        </p>
-        <p className="mt-1 text-sm text-amber-900/80 dark:text-amber-200/80">
-          Asigna rootAreaId a carpetas/recursos viejos. Dry-run primero; escribe solo al confirmar.
-        </p>
-        <button
-          type="button"
-          onClick={handlePreview}
-          disabled={loading}
-          className="mt-3 rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-900 disabled:opacity-60 dark:border-amber-700 dark:bg-zinc-900 dark:text-amber-200"
-        >
-          {loading ? 'Analizando…' : 'Backfill rootAreaId (una sola vez)'}
-        </button>
-      </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
-            <div className="border-b border-neutral-200 px-5 py-4 dark:border-zinc-800">
-              <h2 className="text-lg font-bold text-neutral-900 dark:text-gray-100">
-                {phase === 'done'
-                  ? 'Backfill completado'
-                  : phase === 'writing'
-                    ? 'Escribiendo rootAreaId…'
-                    : 'Dry-run — backfill rootAreaId'}
-              </h2>
-              {phase === 'preview' && (
-                <p className="mt-1 text-sm text-neutral-500">
-                  Carpetas: {totalFolders} · Recursos: {totalResources} · A cambiar:{' '}
-                  {changes.length}
-                </p>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {phase === 'writing' && (
-                <div className="flex flex-col items-center justify-center gap-3 py-10">
-                  <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
-                  <p className="text-sm text-neutral-600 dark:text-gray-400">
-                    Aplicando cambios en Firestore…
-                  </p>
-                </div>
-              )}
-              {phase === 'done' && applyResult && (
-                <div className="space-y-3 py-4 text-sm text-neutral-700 dark:text-gray-300">
-                  <p>
-                    Documentos actualizados:{' '}
-                    <span className="font-semibold text-neutral-900 dark:text-gray-100">
-                      {applyResult.updated}
-                    </span>
-                  </p>
-                  {applyResult.failures.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="font-medium text-amber-700 dark:text-amber-300">
-                        Errores: {applyResult.failures.length}
-                      </p>
-                      <ul className="divide-y divide-amber-100 rounded-lg border border-amber-200 bg-amber-50 dark:divide-amber-900/40 dark:border-amber-800 dark:bg-amber-950/30">
-                        {applyResult.failures.map((row) => (
-                          <li key={`${row.collection}-${row.id}`} className="px-3 py-2">
-                            <p className="font-medium text-neutral-900 dark:text-gray-100">
-                              [{row.collection}] {row.name}
-                            </p>
-                            <p className="font-mono text-xs text-neutral-500 dark:text-gray-400">
-                              {row.id}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-              {phase === 'preview' &&
-                (changes.length === 0 ? (
-                  <p className="text-sm text-neutral-600">Nada pendiente.</p>
-                ) : (
-                  <ul className="divide-y divide-neutral-100 text-sm dark:divide-zinc-800">
-                    {changes.map((row) => (
-                      <li key={`${row.collection}-${row.id}`} className="py-2">
-                        <p className="font-medium text-neutral-900 dark:text-gray-100">
-                          [{row.collection}] {row.name}
-                        </p>
-                        <p className="font-mono text-xs text-neutral-400">{row.id}</p>
-                        <p className="text-neutral-600 dark:text-gray-400">
-                          {row.currentRootAreaId} →{' '}
-                          <span className="font-semibold text-brand-primary">
-                            {row.targetRootAreaId}
-                          </span>
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                ))}
-            </div>
-            <div className="flex justify-end gap-2 border-t border-neutral-200 px-5 py-4 dark:border-zinc-800">
-              {phase === 'done' ? (
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Cerrar
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    disabled={phase === 'writing'}
-                    className="rounded-lg border border-neutral-300 px-4 py-2 text-sm dark:border-zinc-600 disabled:opacity-60"
-                  >
-                    Cancelar
-                  </button>
-                  {changes.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleApply}
-                      disabled={phase === 'writing'}
-                      className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      Confirmar y escribir
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  )
-}
-
 export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMode }) {
   const { userProfile } = useAuth()
   const isAreaMode = mode === 'areaAdmin'
@@ -845,9 +649,6 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
 
   return (
     <div className="w-full">
-      {/* TEMPORAL: borrar después de correr el backfill una sola vez */}
-      {mode === 'super' && <RootAreaBackfillPanel />}
-
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <nav
           aria-label="Ruta de navegación"

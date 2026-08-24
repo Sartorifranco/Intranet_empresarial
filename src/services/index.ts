@@ -93,14 +93,9 @@ export {
   isFolderPublic,
   isResourcePublic,
   resolveRootAreaIdForFolder,
-  previewRootAreaIdBackfill,
-  applyRootAreaIdBackfill,
   type Folder,
   type FolderLevelContents,
   type ResourceItem,
-  type RootAreaBackfillRow,
-  type RootAreaBackfillFailure,
-  type RootAreaBackfillApplyResult,
 } from './folderService'
 export {
   createLink,
