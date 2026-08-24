@@ -43,26 +43,6 @@ export interface FolderLevelContents {
   items: ResourceItem[]
 }
 
-export interface RootAreaBackfillRow {
-  collection: 'folders' | 'resourceItems'
-  id: string
-  name: string
-  currentRootAreaId: string | '(sin rootAreaId)'
-  targetRootAreaId: string
-}
-
-export interface RootAreaBackfillFailure {
-  collection: 'folders' | 'resourceItems'
-  id: string
-  name: string
-}
-
-export interface RootAreaBackfillApplyResult {
-  updated: number
-  errors: number
-  failures: RootAreaBackfillFailure[]
-}
-
 function toDate(value: Timestamp | Date): Date {
   return value instanceof Timestamp ? value.toDate() : value
 }
@@ -231,7 +211,7 @@ export async function createFolder(
 
     if (!rootAreaId) {
       throw new Error(
-        'La carpeta padre no tiene rootAreaId. Pedile a un Super Admin que corra el backfill.',
+        'No se pudo determinar el área de esta carpeta. Puede haber un dato inconsistente — avisale a Sistemas para revisarlo en Firestore.',
       )
     }
   }
@@ -270,7 +250,7 @@ export async function createResourceItem(
 
   if (data.folderId && !rootAreaId) {
     throw new Error(
-      'No se pudo resolver rootAreaId del padre. Pedile a un Super Admin que corra el backfill.',
+      'No se pudo determinar el área de esta carpeta. Puede haber un dato inconsistente — avisale a Sistemas para revisarlo en Firestore.',
     )
   }
 
@@ -358,114 +338,4 @@ export async function getFolderById(folderId: string): Promise<Folder | null> {
   }
 
   return mapDocToFolder(snapshot.id, snapshot.data())
-}
-
-// TEMPORAL: borrar después de correr el backfill una sola vez
-export async function previewRootAreaIdBackfill(): Promise<{
-  totalFolders: number
-  totalResources: number
-  changes: RootAreaBackfillRow[]
-}> {
-  const [foldersSnap, resourcesSnap] = await Promise.all([
-    getDocs(collection(db, FOLDERS_COLLECTION)),
-    getDocs(collection(db, RESOURCE_ITEMS_COLLECTION)),
-  ])
-
-  const folders = foldersSnap.docs.map((d) => mapDocToFolder(d.id, d.data()))
-  const byId = new Map(folders.map((f) => [f.id!, f]))
-
-  function resolveFromMap(folderId: string): string | null {
-    const visited = new Set<string>()
-    let currentId: string | null = folderId
-    while (currentId) {
-      if (visited.has(currentId)) return null
-      visited.add(currentId)
-      const folder = byId.get(currentId)
-      if (!folder) return null
-      if (folder.parentFolderId === null) return folder.id ?? currentId
-      currentId = folder.parentFolderId
-    }
-    return null
-  }
-
-  const changes: RootAreaBackfillRow[] = []
-
-  for (const folder of folders) {
-    if (!folder.id) continue
-    const target = resolveFromMap(folder.id)
-    if (!target) continue
-    const current = folder.rootAreaId ?? '(sin rootAreaId)'
-    if (current !== target) {
-      changes.push({
-        collection: 'folders',
-        id: folder.id,
-        name: folder.name,
-        currentRootAreaId: current,
-        targetRootAreaId: target,
-      })
-    }
-  }
-
-  for (const docSnap of resourcesSnap.docs) {
-    const item = mapDocToResourceItem(docSnap.id, docSnap.data())
-    if (!item.folderId) continue
-    const target = resolveFromMap(item.folderId)
-    if (!target) continue
-    const current = item.rootAreaId ?? '(sin rootAreaId)'
-    if (current !== target) {
-      changes.push({
-        collection: 'resourceItems',
-        id: docSnap.id,
-        name: item.name,
-        currentRootAreaId: current,
-        targetRootAreaId: target,
-      })
-    }
-  }
-
-  return {
-    totalFolders: foldersSnap.size,
-    totalResources: resourcesSnap.size,
-    changes,
-  }
-}
-
-// TEMPORAL: borrar después de correr el backfill una sola vez
-export async function applyRootAreaIdBackfill(
-  changes: RootAreaBackfillRow[],
-): Promise<RootAreaBackfillApplyResult> {
-  let updated = 0
-  const failures: RootAreaBackfillFailure[] = []
-  // Chunks chicos + allSettled: evita batch.commit() colgado en el cliente
-  // aunque Firestore ya haya persistido los writes.
-  const CONCURRENCY = 25
-
-  for (let i = 0; i < changes.length; i += CONCURRENCY) {
-    const chunk = changes.slice(i, i + CONCURRENCY)
-    const results = await Promise.allSettled(
-      chunk.map(async (row) => {
-        const collectionName =
-          row.collection === 'folders' ? FOLDERS_COLLECTION : RESOURCE_ITEMS_COLLECTION
-        await updateDoc(doc(db, collectionName, row.id), {
-          rootAreaId: row.targetRootAreaId,
-        })
-      }),
-    )
-
-    results.forEach((result, index) => {
-      const row = chunk[index]
-      if (result.status === 'fulfilled') {
-        updated += 1
-        return
-      }
-      failures.push({
-        collection: row.collection,
-        id: row.id,
-        name: row.name,
-      })
-      console.error(`Error backfill ${row.collection}/${row.id}:`, result.reason)
-    })
-  }
-
-  return { updated, errors: failures.length, failures }
 }
