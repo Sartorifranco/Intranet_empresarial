@@ -13,6 +13,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore'
 import { db } from './firebase'
+import { logAction, logPermissionChanges } from './auditLogService'
 
 const FOLDERS_COLLECTION = 'folders'
 const RESOURCE_ITEMS_COLLECTION = 'resourceItems'
@@ -230,9 +231,20 @@ export async function createFolder(
   const docRef = await addDoc(collection(db, FOLDERS_COLLECTION), payload)
 
   // Carpeta de primer nivel: rootAreaId = su propio id
+  let finalRootAreaId = rootAreaId
   if (!parentFolderId) {
     await updateDoc(docRef, { rootAreaId: docRef.id })
+    finalRootAreaId = docRef.id
   }
+
+  await logAction({
+    action: 'create',
+    targetType: 'folder',
+    targetId: docRef.id,
+    targetName: name.trim(),
+    parentFolderId,
+    metadata: { rootAreaId: finalRootAreaId ?? null },
+  })
 
   return docRef.id
 }
@@ -268,6 +280,16 @@ export async function createResourceItem(
   }
 
   const docRef = await addDoc(collection(db, RESOURCE_ITEMS_COLLECTION), payload)
+
+  await logAction({
+    action: 'create',
+    targetType: 'resource',
+    targetId: docRef.id,
+    targetName: data.name.trim(),
+    parentFolderId: data.folderId,
+    metadata: { type: data.type, rootAreaId: rootAreaId ?? null },
+  })
+
   return docRef.id
 }
 
@@ -277,6 +299,11 @@ export async function createResourceItem(
  * el UI debe capturarlo y mostrar la advertencia al administrador.
  */
 export async function deleteFolder(folderId: string): Promise<void> {
+  const folder = await getFolderById(folderId)
+  if (!folder) {
+    throw new Error('Carpeta no encontrada')
+  }
+
   const children = await getFolderChildrenCount(folderId)
 
   if (children.folders > 0 || children.items > 0) {
@@ -287,46 +314,138 @@ export async function deleteFolder(folderId: string): Promise<void> {
   }
 
   await deleteDoc(doc(db, FOLDERS_COLLECTION, folderId))
+
+  await logAction({
+    action: 'delete',
+    targetType: 'folder',
+    targetId: folderId,
+    targetName: folder.name,
+    parentFolderId: folder.parentFolderId,
+    metadata: { rootAreaId: folder.rootAreaId ?? null },
+  })
 }
 
 export async function deleteResourceItem(itemId: string): Promise<void> {
+  const snapshot = await getDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId))
+  if (!snapshot.exists()) {
+    throw new Error('Recurso no encontrado')
+  }
+  const item = mapDocToResourceItem(snapshot.id, snapshot.data())
+
   await deleteDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId))
+
+  await logAction({
+    action: 'delete',
+    targetType: 'resource',
+    targetId: itemId,
+    targetName: item.name,
+    parentFolderId: item.folderId,
+    metadata: { rootAreaId: item.rootAreaId ?? null },
+  })
 }
 
 export async function updateFolderPermissions(
   folderId: string,
   allowedUsers: string[],
 ): Promise<void> {
-  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  const folder = await getFolderById(folderId)
+  if (!folder) {
+    throw new Error('Carpeta no encontrada')
+  }
+
+  const before = folder.allowedUsers ?? []
+
   await updateDoc(doc(db, FOLDERS_COLLECTION, folderId), {
     allowedUsers,
+  })
+
+  await logPermissionChanges({
+    targetType: 'folder',
+    targetId: folderId,
+    targetName: folder.name,
+    parentFolderId: folder.parentFolderId,
+    before,
+    after: allowedUsers,
   })
 }
 
 export async function updateFolderName(folderId: string, name: string): Promise<void> {
+  const folder = await getFolderById(folderId)
+  if (!folder) {
+    throw new Error('Carpeta no encontrada')
+  }
+
+  const trimmed = name.trim()
+  const before = folder.name
+
   await updateDoc(doc(db, FOLDERS_COLLECTION, folderId), {
-    name: name.trim(),
+    name: trimmed,
   })
+
+  if (before !== trimmed) {
+    await logAction({
+      action: 'rename',
+      targetType: 'folder',
+      targetId: folderId,
+      targetName: trimmed,
+      parentFolderId: folder.parentFolderId,
+      metadata: { antes: before, despues: trimmed, rootAreaId: folder.rootAreaId ?? null },
+    })
+  }
 }
 
 export async function updateResourceItem(
   itemId: string,
   data: Pick<ResourceItem, 'name' | 'url' | 'type'>,
 ): Promise<void> {
+  const snapshot = await getDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId))
+  if (!snapshot.exists()) {
+    throw new Error('Recurso no encontrado')
+  }
+  const item = mapDocToResourceItem(snapshot.id, snapshot.data())
+
+  const trimmedName = data.name.trim()
+
   await updateDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId), {
-    name: data.name.trim(),
+    name: trimmedName,
     url: data.url.trim(),
     type: data.type,
   })
+
+  if (item.name !== trimmedName) {
+    await logAction({
+      action: 'rename',
+      targetType: 'resource',
+      targetId: itemId,
+      targetName: trimmedName,
+      parentFolderId: item.folderId,
+      metadata: { antes: item.name, despues: trimmedName, rootAreaId: item.rootAreaId ?? null },
+    })
+  }
 }
 
 export async function updateResourcePermissions(
   itemId: string,
   allowedUsers: string[],
 ): Promise<void> {
-  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  const snapshot = await getDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId))
+  if (!snapshot.exists()) {
+    throw new Error('Recurso no encontrado')
+  }
+  const item = mapDocToResourceItem(snapshot.id, snapshot.data())
+  const before = item.allowedUsers ?? []
+
   await updateDoc(doc(db, RESOURCE_ITEMS_COLLECTION, itemId), {
     allowedUsers,
+  })
+
+  await logPermissionChanges({
+    targetType: 'resource',
+    targetId: itemId,
+    targetName: item.name,
+    parentFolderId: item.folderId,
+    before,
+    after: allowedUsers,
   })
 }
 
