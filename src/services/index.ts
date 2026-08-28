@@ -39,6 +39,17 @@ export {
 export { api } from './api'
 export { auth, db } from './firebase'
 export {
+  logAction,
+  getAuditLogs,
+  logPermissionChanges,
+  AUDIT_LOGS_COLLECTION,
+  type AuditAction,
+  type AuditLogEntry,
+  type AuditTargetType,
+  type GetAuditLogsOptions,
+  type LogActionInput,
+} from './auditLogService'
+export {
   createSharedFile,
   deleteSharedFile,
   filterSharedFilesForUser,

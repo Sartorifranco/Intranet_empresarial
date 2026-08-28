@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore'
 import { removeUserFromAllDriveFiles } from './googleDriveService'
 import { auth, db } from './firebase'
+import { logAction } from './auditLogService'
 
 const USERS_COLLECTION = 'users'
 
@@ -365,13 +366,31 @@ export async function updateUserRole(
     throw new Error('updateUserRole solo acepta "admin" o "user"')
   }
 
-  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  const snapshot = await getDoc(doc(db, USERS_COLLECTION, uid))
+  if (!snapshot.exists()) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  const beforeRole = snapshot.data().role as UserRole | undefined
+  const targetName =
+    (typeof snapshot.data().displayName === 'string' && snapshot.data().displayName) ||
+    (typeof snapshot.data().email === 'string' && snapshot.data().email) ||
+    uid
+
   const patch: Record<string, unknown> = { role }
   if (role === 'user') {
     patch.managedAreaIds = []
   }
 
   await updateDoc(doc(db, USERS_COLLECTION, uid), patch)
+
+  await logAction({
+    action: 'role_change',
+    targetType: 'user',
+    targetId: uid,
+    targetName,
+    metadata: { antes: beforeRole ?? null, despues: role },
+  })
 }
 
 /**
@@ -398,8 +417,23 @@ export async function updateManagedAreaIds(
     .map((id) => id.trim())
     .filter((id) => id.length > 0)
 
-  // TODO: registrar en auditLog cuando exista el servicio (Fase 2 del roadmap original)
+  const beforeAreas = Array.isArray(snapshot.data().managedAreaIds)
+    ? (snapshot.data().managedAreaIds as string[])
+    : []
+  const targetName =
+    (typeof snapshot.data().displayName === 'string' && snapshot.data().displayName) ||
+    (typeof snapshot.data().email === 'string' && snapshot.data().email) ||
+    uid
+
   await updateDoc(doc(db, USERS_COLLECTION, uid), {
     managedAreaIds: cleaned,
+  })
+
+  await logAction({
+    action: 'managed_areas_change',
+    targetType: 'user',
+    targetId: uid,
+    targetName,
+    metadata: { antes: beforeAreas, despues: cleaned },
   })
 }

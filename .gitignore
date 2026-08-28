@@ -17,7 +17,13 @@ dist-ssr
 # Firebase Admin / service accounts (GOOGLE_APPLICATION_CREDENTIALS)
 *-firebase-adminsdk-*.json
 serviceAccount*.json
+**/*service-account*.json
+**/*-drive-sa*.json
+**/google-drive-sa.json
 **/secrets/**
+backend/.env
+backend/.env.*
+!backend/.env.example
 
 # Capacitor / Android
 android/.gradle

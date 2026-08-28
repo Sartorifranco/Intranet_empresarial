@@ -70,6 +70,43 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteApps']);
     }
 
+    function auditLogCreateValid() {
+      return request.resource.data.keys().hasAll([
+        'userId',
+        'userEmail',
+        'action',
+        'targetType',
+        'targetId',
+        'targetName',
+        'parentFolderId',
+        'mimeType',
+        'reason',
+        'metadata',
+        'createdAt',
+      ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail is string
+        && request.resource.data.action is string
+        && request.resource.data.targetType is string
+        && request.resource.data.targetId is string
+        && request.resource.data.targetName is string
+        && (request.resource.data.parentFolderId is string || request.resource.data.parentFolderId == null)
+        && (request.resource.data.mimeType is string || request.resource.data.mimeType == null)
+        && (request.resource.data.reason is string || request.resource.data.reason == null)
+        && request.resource.data.metadata is map
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    // Append-only. Lectura: super_admin (panel). Escritura cliente: intranet actual.
+    // Pasos 3–5: acciones sobre Drive las escribe el backend con Admin SDK (no pasan por rules).
+    // En ese momento hay que restringir create de cliente a acciones que no sean Drive
+    // (o denegar create de cliente y dejar solo Admin SDK).
+    match /auditLogs/{document} {
+      allow create: if isAuthenticated() && auditLogCreateValid();
+      allow get, list: if isSuperAdmin();
+      allow update, delete: if false;
+    }
+
     // Perfiles de usuario y permisos
     // get: propio doc, o Super Admin / Admin de área / emails hardcodeados
     // list: solo Super Admin / Admin de área / emails hardcodeados (no usuarios comunes)

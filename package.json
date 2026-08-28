@@ -13,6 +13,9 @@
     "android": "npm run cap:sync && npx cap open android",
     "migrate:roles": "node scripts/migrate-user-roles.mjs",
     "migrate:roles:dry-run": "node scripts/migrate-user-roles.mjs --dry-run",
+    "audit:reset": "node scripts/reset-audit-logs.mjs",
+    "audit:reset:dry-run": "node scripts/reset-audit-logs.mjs --dry-run",
+    "audit:reset:archive": "node scripts/reset-audit-logs.mjs --archive",
     "test:rules:users": "node scripts/test-users-rules.mjs"
   },
   "dependencies": {
