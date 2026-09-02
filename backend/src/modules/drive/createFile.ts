@@ -12,6 +12,7 @@ import {
   writeFileClassificationBestEffort,
   writeFolderSidecarBestEffort,
 } from './classification.js'
+import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
 import { resolveDriveSubject } from './driveSubject.js'
 import { getAllowedUploadMimeTypes, getMinReasonLength } from './policy.js'
 import { resolveGoverningAreaId } from './resolveGoverningArea.js'
@@ -202,6 +203,7 @@ export async function createDriveFile(req: Request, res: Response): Promise<void
         metadata: { type, governingAreaId },
       })
 
+      invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
       res.status(201).json({
         id,
         name: fileName,
@@ -247,6 +249,7 @@ export async function createDriveFile(req: Request, res: Response): Promise<void
       metadata: { type, classification, status: 'BORRADOR', governingAreaId },
     })
 
+    invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
     res.status(201).json({
       id,
       name: fileName,

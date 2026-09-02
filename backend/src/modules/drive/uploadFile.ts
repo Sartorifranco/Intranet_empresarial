@@ -10,6 +10,7 @@ import {
   parseClassificationInput,
   writeFileClassificationBestEffort,
 } from './classification.js'
+import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
 import { resolveDriveSubject } from './driveSubject.js'
 import { getAllowedUploadMimeTypes, getMinReasonLength } from './policy.js'
 import { resolveGoverningAreaId } from './resolveGoverningArea.js'
@@ -210,6 +211,7 @@ export async function uploadDriveFile(req: Request, res: Response): Promise<void
       },
     })
 
+    invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
     res.status(201).json({
       id,
       name: created.data.name ?? name,

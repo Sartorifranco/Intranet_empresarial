@@ -1,8 +1,11 @@
 import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { listAssignableRootAreas, type GoverningArea } from '../services/areaService'
-import { listBoards, type BoardDto } from '../services/boardsApi'
+import { useAuth } from '../context'
+import {
+  useAssignableAreasQuery,
+  useBoardsQuery,
+} from '../hooks/queries/useCatalogQueries'
 import {
   deletePendingUserSetup,
   listPendingUserSetups,
@@ -67,6 +70,11 @@ interface PendingSetupDrawerProps {
 }
 
 function PendingSetupDrawer({ initial, onClose, onSaved }: PendingSetupDrawerProps) {
+  const { user } = useAuth()
+  const { data: areas = [], isLoading: loadingAreas } = useAssignableAreasQuery()
+  const { data: boardResult, isLoading: loadingBoards } = useBoardsQuery(user?.uid)
+  const boards = boardResult?.boards ?? []
+  const loading = loadingAreas || loadingBoards
   const [email, setEmail] = useState(initial?.email ?? '')
   const [role, setRole] = useState<'admin' | 'user'>(initial?.role ?? 'user')
   const [managedAreaIds, setManagedAreaIds] = useState<string[]>(
@@ -83,31 +91,7 @@ function PendingSetupDrawer({ initial, onClose, onSaved }: PendingSetupDrawerPro
     () => initial?.boardAccess.map((row) => row.boardFolderId) ?? [],
   )
   const [note, setNote] = useState(initial?.note ?? '')
-  const [areas, setAreas] = useState<GoverningArea[]>([])
-  const [boards, setBoards] = useState<BoardDto[]>([])
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    Promise.all([listAssignableRootAreas(), listBoards()])
-      .then(([areaRows, boardResult]) => {
-        if (cancelled) return
-        setAreas(areaRows)
-        setBoards(boardResult.boards)
-      })
-      .catch((err) => {
-        console.error(err)
-        if (!cancelled) toast.error('No se pudieron cargar áreas o tableros')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

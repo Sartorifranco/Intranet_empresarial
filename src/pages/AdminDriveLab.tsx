@@ -22,7 +22,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { DrivePermissionsModal } from '../components/DrivePermissionsModal'
@@ -30,7 +30,6 @@ import { useAuth, useTheme } from '../context'
 import {
   approveDriveFile,
   createDriveFile,
-  listDriveFiles,
   trashDriveFile,
   updateDriveClassification,
   uploadDriveFile,
@@ -38,6 +37,10 @@ import {
   type DriveCreateType,
   type DriveFileDto,
 } from '../services/driveApi'
+import {
+  invalidateDriveFolderListing,
+  useDriveFilesQuery,
+} from '../hooks/queries/useDriveFilesQuery'
 import { canOpenDriveEmbedded } from '../utils/googleDriveEmbed'
 
 type FileKind = 'folder' | 'document' | 'spreadsheet' | 'pdf' | 'image'
@@ -100,7 +103,7 @@ function formatModified(value: string | null): string {
 
 export function AdminDriveLab() {
   const { isDark, toggleTheme } = useTheme()
-  const { userProfile } = useAuth()
+  const { user, userProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const isSuperAdmin = userProfile?.role === 'super_admin'
@@ -110,10 +113,6 @@ export function AdminDriveLab() {
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([
     { id: null, name: 'bacarsa' },
   ])
-  const [files, setFiles] = useState<DriveFileDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [resolvedFolderId, setResolvedFolderId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showNewMenu, setShowNewMenu] = useState(false)
   const [creating, setCreating] = useState(false)
@@ -139,24 +138,24 @@ export function AdminDriveLab() {
   const isAtDriveRoot = currentFolder.id === null
   const showCreateUploadActions = isSuperAdmin || !isAtDriveRoot
 
-  const loadContents = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await listDriveFiles(currentFolder.id)
-      setFiles(result.files)
-      setResolvedFolderId(result.folderId)
-    } catch (err) {
-      setFiles([])
-      setError(err instanceof Error ? err.message : 'No se pudo cargar la carpeta')
-    } finally {
-      setLoading(false)
-    }
-  }, [currentFolder.id])
+  const {
+    data: folderData,
+    isLoading: loading,
+    isError,
+    error: queryError,
+  } = useDriveFilesQuery(user?.uid, currentFolder.id)
 
-  useEffect(() => {
-    void loadContents()
-  }, [loadContents])
+  const files = folderData?.files ?? []
+  const resolvedFolderId = folderData?.folderId ?? null
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'No se pudo cargar la carpeta'
+    : null
+
+  const refreshFolderListing = async () => {
+    await invalidateDriveFolderListing(user?.uid, currentFolder.id)
+  }
 
   const visibleFiles = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('es')
@@ -210,7 +209,7 @@ export function AdminDriveLab() {
       setShowCreate(false)
       setCreateName('')
       setCreateReason('')
-      await loadContents()
+      await refreshFolderListing()
     } catch (err) {
       toast.error(
         err instanceof Error
@@ -239,7 +238,7 @@ export function AdminDriveLab() {
       setShowUpload(false)
       setUploadFileValue(null)
       setUploadReason('')
-      await loadContents()
+      await refreshFolderListing()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'No se pudo subir el archivo')
     } finally {
@@ -284,7 +283,7 @@ export function AdminDriveLab() {
         toast.success('Clasificación actualizada')
       }
       setAction(null)
-      await loadContents()
+      await refreshFolderListing()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'No se pudo completar la acción')
     } finally {
@@ -465,7 +464,7 @@ export function AdminDriveLab() {
               <p className="text-sm font-medium text-danger">{error}</p>
               <button
                 type="button"
-                onClick={() => void loadContents()}
+                onClick={() => void refreshFolderListing()}
                 className="mt-3 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
               >
                 Reintentar

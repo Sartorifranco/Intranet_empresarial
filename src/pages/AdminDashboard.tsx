@@ -2,9 +2,8 @@ import { ArrowRight, Link2, Newspaper, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context'
+import { useLinksQuery, useNewsQuery } from '../hooks/queries/useCatalogQueries'
 import { getCoreApps } from '../services/coreAppService'
-import { getLinks } from '../services/linkService'
-import { getNews } from '../services/newsService'
 import { canManageUsers, getAllUsers } from '../services/userService'
 
 interface MetricCardProps {
@@ -34,27 +33,26 @@ function MetricCard({ label, value, icon, loading }: MetricCardProps) {
 
 export function AdminDashboard() {
   const { user, userProfile } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [newsCount, setNewsCount] = useState(0)
-  const [linksCount, setLinksCount] = useState(0)
+  const { data: news = [], isLoading: loadingNews } = useNewsQuery(true)
+  const { data: links = [], isLoading: loadingLinks } = useLinksQuery()
+  const [loadingCoreApps, setLoadingCoreApps] = useState(true)
   const [coreAppsCount, setCoreAppsCount] = useState(0)
   const [usersCount, setUsersCount] = useState<number | null>(null)
 
   const canViewUsers = canManageUsers(userProfile?.permissions)
+  const loading = loadingNews || loadingLinks || loadingCoreApps
+  const newsCount = news.length
+  const linksCount = links.length
 
   useEffect(() => {
     const loadMetrics = async () => {
       try {
-        const [news, links, coreApps] = await Promise.all([
-          getNews({ includeExpired: true }),
-          getLinks(),
-          getCoreApps(),
-        ])
-        setNewsCount(news.length)
-        setLinksCount(links.length)
+        const coreApps = await getCoreApps()
         setCoreAppsCount(coreApps.length)
       } catch (err) {
         console.error('Error al cargar métricas:', err)
+      } finally {
+        setLoadingCoreApps(false)
       }
 
       if (canViewUsers) {
@@ -67,10 +65,9 @@ export function AdminDashboard() {
         }
       }
 
-      setLoading(false)
     }
 
-    loadMetrics()
+    void loadMetrics()
   }, [canViewUsers])
 
   return (

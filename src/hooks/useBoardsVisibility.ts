@@ -1,36 +1,20 @@
-import { useEffect, useState } from 'react'
 import { useAuth } from '../context'
-import { fetchBoardsVisibility } from '../services/boardsApi'
+import { useBoardsVisibilityQuery } from './queries/useCatalogQueries'
 import { isSuperAdmin } from '../services/userService'
 
 export function useBoardsVisibility(): boolean | null {
   const { user, userProfile, loading } = useAuth()
-  const [visible, setVisible] = useState<boolean | null>(null)
+  const superAdmin = isSuperAdmin(userProfile)
+  const { data, isPending, isError } = useBoardsVisibilityQuery(
+    user?.uid,
+    !loading && Boolean(user),
+    superAdmin,
+  )
 
-  useEffect(() => {
-    if (loading) return
-    if (!user) {
-      setVisible(false)
-      return
-    }
-    if (isSuperAdmin(userProfile)) {
-      setVisible(true)
-      return
-    }
-
-    let cancelled = false
-    fetchBoardsVisibility()
-      .then((result) => {
-        if (!cancelled) setVisible(result.visible)
-      })
-      .catch(() => {
-        if (!cancelled) setVisible(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [user, userProfile, loading])
-
-  return visible
+  if (loading) return null
+  if (!user) return false
+  if (superAdmin) return true
+  if (isPending) return null
+  if (isError) return false
+  return data?.visible ?? false
 }

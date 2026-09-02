@@ -1,12 +1,13 @@
 import { Timestamp } from 'firebase/firestore'
 import { ExternalLink } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { BirthdayWidget } from '../components/BirthdayWidget'
 import { DailyWidgets } from '../components/DailyWidgets'
 import { KudosWall } from '../components/KudosWall'
 import { PollWidget } from '../components/PollWidget'
-import { getLinks, type LinkCategory, type UsefulLink } from '../services/linkService'
-import { getNews, type NewsCategory, type NewsPost } from '../services/newsService'
+import { useLinksQuery, useNewsQuery } from '../hooks/queries/useCatalogQueries'
+import { type LinkCategory } from '../services/linkService'
+import { type NewsCategory } from '../services/newsService'
 
 const NEWS_CATEGORY_STYLES: Record<NewsCategory, { label: string; badge: string }> = {
   General: {
@@ -90,38 +91,21 @@ function LinksSkeleton() {
 }
 
 export function Intranet() {
-  const [news, setNews] = useState<NewsPost[]>([])
-  const [links, setLinks] = useState<UsefulLink[]>([])
-  const [loadingNews, setLoadingNews] = useState(true)
-  const [loadingLinks, setLoadingLinks] = useState(true)
-  const [newsError, setNewsError] = useState<string | null>(null)
-  const [linksError, setLinksError] = useState<string | null>(null)
+  const {
+    data: news = [],
+    isLoading: loadingNews,
+    isError: newsIsError,
+  } = useNewsQuery()
+  const {
+    data: links = [],
+    isLoading: loadingLinks,
+    isError: linksIsError,
+  } = useLinksQuery()
 
-  useEffect(() => {
-    getNews()
-      .then((data) => {
-        setNews(data)
-        setNewsError(null)
-      })
-      .catch((err) => {
-        console.error('Error al cargar las noticias:', err)
-        setNews([])
-        setNewsError('No se pudieron cargar las noticias. Intentá nuevamente.')
-      })
-      .finally(() => setLoadingNews(false))
-
-    getLinks()
-      .then((data) => {
-        setLinks(data)
-        setLinksError(null)
-      })
-      .catch((err) => {
-        console.error('Error al cargar los enlaces:', err)
-        setLinks([])
-        setLinksError('No se pudieron cargar los accesos directos.')
-      })
-      .finally(() => setLoadingLinks(false))
-  }, [])
+  const newsError = newsIsError ? 'No se pudieron cargar las noticias. Intentá nuevamente.' : null
+  const linksError = linksIsError
+    ? 'No se pudieron cargar los accesos directos.'
+    : null
 
   const linksByCategory = useMemo(
     () =>

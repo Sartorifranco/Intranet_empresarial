@@ -1,12 +1,9 @@
 import { ArrowRight, LayoutDashboard } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context'
+import { useBoardsQuery } from '../../hooks/queries/useCatalogQueries'
 import { useBoardsVisibility } from '../../hooks/useBoardsVisibility'
-import {
-  ensureBoardSession,
-  listBoards,
-  type BoardDto,
-} from '../../services/boardsApi'
+import { type BoardDto } from '../../services/boardsApi'
 
 function BoardCompactCard({ board }: { board: BoardDto }) {
   return (
@@ -42,31 +39,15 @@ function BoardsSkeleton() {
 }
 
 export function HomeBoardsSection() {
+  const { user } = useAuth()
   const boardsVisible = useBoardsVisibility()
-  const [boards, setBoards] = useState<BoardDto[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(false)
-    try {
-      await ensureBoardSession()
-      const result = await listBoards()
-      setBoards(result.boards)
-    } catch (err) {
-      console.error('Error al cargar tableros para la home:', err)
-      setBoards([])
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (boardsVisible !== true) return
-    void load()
-  }, [boardsVisible, load])
+  const {
+    data,
+    isLoading: loading,
+    isError,
+  } = useBoardsQuery(user?.uid, boardsVisible === true)
+  const boards = data?.boards ?? []
+  const error = isError
 
   if (boardsVisible !== true) return null
 

@@ -12,6 +12,8 @@ import {
   GOVERN_DRIVE_FORBIDDEN,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
+import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
+import { resolveDriveSubject } from './driveSubject.js'
 import { getMinReasonLength } from './policy.js'
 
 export async function updateDriveFileClassification(req: Request, res: Response): Promise<void> {
@@ -94,6 +96,7 @@ export async function updateDriveFileClassification(req: Request, res: Response)
     },
   })
 
+  invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
   res.json({
     id: fileId,
     classification,

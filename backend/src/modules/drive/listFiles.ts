@@ -11,6 +11,11 @@ import {
   isFileClassification,
   isFileStatus,
 } from './classification.js'
+import {
+  getAreaNamesByIds,
+  getCachedRootProbeExtras,
+  getDriveFolderMappings,
+} from './driveMetadataCache.js'
 import { resolveDriveSubject } from './driveSubject.js'
 import { resolveGoverningAreaId } from './resolveGoverningArea.js'
 
@@ -48,7 +53,8 @@ export async function listDriveFiles(req: Request, res: Response): Promise<void>
       : undefined
 
   try {
-    const drive = await getDrive(resolveDriveSubject(user))
+    const driveSubject = resolveDriveSubject(user)
+    const drive = await getDrive(driveSubject)
     const shared = getSharedDriveQuery()
     const result = await drive.files.list({
       q: `'${folderId}' in parents and trashed = false`,
@@ -65,30 +71,33 @@ export async function listDriveFiles(req: Request, res: Response): Promise<void>
     // directamente, pero Drive no siempre la devuelve al listar la raíz. Usamos
     // los IDs de mapeo como índice y conservamos solo los que el usuario puede leer.
     if (folderId === getSharedDriveRootId()) {
-      const mappings = await adminDb().collection('driveFolderAreas').get()
+      const mappings = await getDriveFolderMappings()
       const knownIds = new Set(driveFiles.map((file) => file.id).filter(Boolean))
-      const probed = await Promise.all(
-        mappings.docs
-          .filter((mapping) => !knownIds.has(mapping.id))
-          .map(async (mapping) => {
-            try {
-              const meta = await drive.files.get({
-                fileId: mapping.id,
-                supportsAllDrives: true,
-                fields:
-                  'id, name, mimeType, parents, modifiedTime, createdTime, size, iconLink, webViewLink, shortcutDetails, lastModifyingUser(displayName,emailAddress), capabilities(canTrash,canEdit,canShare,canAddChildren)',
-              })
-              return meta.data
-            } catch (err) {
-              const status = googleStatus(err)
-              if (status === 403 || status === 404) return null
-              throw err
-            }
-          }),
-      )
+      const probed = await getCachedRootProbeExtras(driveSubject, user.uid, async () => {
+        const results = await Promise.all(
+          mappings
+            .filter((mapping) => !knownIds.has(mapping.id))
+            .map(async (mapping) => {
+              try {
+                const meta = await drive.files.get({
+                  fileId: mapping.id,
+                  supportsAllDrives: true,
+                  fields:
+                    'id, name, mimeType, parents, modifiedTime, createdTime, size, iconLink, webViewLink, shortcutDetails, lastModifyingUser(displayName,emailAddress), capabilities(canTrash,canEdit,canShare,canAddChildren)',
+                })
+                return meta.data
+              } catch (err) {
+                const status = googleStatus(err)
+                if (status === 403 || status === 404) return null
+                throw err
+              }
+            }),
+        )
+        return results.filter((file): file is NonNullable<typeof file> => file !== null)
+      })
       driveFiles = [
         ...driveFiles,
-        ...probed.filter((file): file is NonNullable<typeof file> => file !== null),
+        ...probed,
       ].sort((a, b) => {
         const folderDelta =
           Number(b.mimeType === FOLDER_MIME) - Number(a.mimeType === FOLDER_MIME)
@@ -121,17 +130,7 @@ export async function listDriveFiles(req: Request, res: Response): Promise<void>
       }),
     )
     const uniqueAreaIds = [...new Set(areaIds.filter((id): id is string => Boolean(id)))]
-    const areaSnaps = uniqueAreaIds.length
-      ? await adminDb().getAll(
-          ...uniqueAreaIds.map((id) => adminDb().collection('folders').doc(id)),
-        )
-      : []
-    const areaNameById = new Map(
-      areaSnaps.map((snap) => [
-        snap.id,
-        snap.exists && typeof snap.get('name') === 'string' ? snap.get('name') : snap.id,
-      ]),
-    )
+    const areaNameById = await getAreaNamesByIds(uniqueAreaIds)
 
     const files = driveFiles.map((file, index) => {
       const id = file.id ?? ''
