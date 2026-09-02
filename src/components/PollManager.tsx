@@ -291,7 +291,7 @@ export function PollManager() {
                 <button
                   type="button"
                   onClick={addOption}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:text-red-950"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-brand-primary hover:opacity-90"
                 >
                   <Plus className="h-4 w-4" />
                   Agregar opción
@@ -314,7 +314,7 @@ export function PollManager() {
                       type="button"
                       onClick={() => removeOption(index)}
                       aria-label={`Eliminar opción ${index + 1}`}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 dark:border-zinc-800 text-neutral-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 dark:border-zinc-800 text-neutral-400 hover:bg-brand-tint hover:text-brand-primary dark:hover:bg-brand-primary-hover/40"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -365,7 +365,7 @@ export function PollManager() {
             <div className="spinner-brand h-8 w-8 animate-spin rounded-full border-4" />
           </div>
         ) : error ? (
-          <p className="px-6 py-16 text-center text-sm text-red-600">{error}</p>
+          <p className="px-6 py-16 text-center text-sm text-danger">{error}</p>
         ) : polls.length === 0 ? (
           <p className="px-6 py-16 text-center text-sm text-neutral-500 dark:text-gray-400">
             Aún no hay encuestas creadas.
@@ -391,7 +391,7 @@ export function PollManager() {
                       )}
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         {poll.active ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-brand-primary ring-1 ring-red-100 dark:bg-red-950/40">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-semibold text-brand-primary ring-1 ring-brand-primary/15 dark:bg-brand-tint">
                             <CheckCircle2 className="h-3 w-3" />
                             Activa
                           </span>
@@ -439,7 +439,7 @@ export function PollManager() {
                           onClick={() => handleDelete(poll.id!, poll.question)}
                           disabled={deletingId === poll.id}
                           aria-label={`Eliminar encuesta ${poll.question}`}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:opacity-50 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint hover:text-danger disabled:opacity-50 dark:hover:bg-brand-primary-hover/40 dark:hover:text-brand-primary"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

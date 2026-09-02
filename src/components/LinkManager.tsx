@@ -242,7 +242,7 @@ export function LinkManager() {
             <div className="spinner-brand h-8 w-8 animate-spin rounded-full border-4" />
           </div>
         ) : error ? (
-          <p className="px-6 py-16 text-center text-sm text-red-600">{error}</p>
+          <p className="px-6 py-16 text-center text-sm text-danger">{error}</p>
         ) : links.length === 0 ? (
           <p className="px-6 py-16 text-center text-sm text-neutral-500 dark:text-gray-400">
             Aún no hay enlaces registrados.
@@ -259,7 +259,7 @@ export function LinkManager() {
                     <li
                       key={link.id}
                       className={`flex items-start justify-between gap-4 px-4 py-4 transition-colors hover:bg-neutral-50 dark:bg-zinc-950/80 ${
-                        editingId === link.id ? 'bg-red-50 dark:bg-red-950/40/50' : ''
+                        editingId === link.id ? 'bg-brand-tint/50' : ''
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -269,7 +269,7 @@ export function LinkManager() {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-brand-primary hover:text-red-950"
+                            className="text-brand-primary hover:opacity-90"
                             aria-label={`Abrir ${link.title}`}
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
@@ -282,7 +282,7 @@ export function LinkManager() {
                         <button
                           type="button"
                           onClick={() => handleEdit(link)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-medium text-neutral-700 dark:text-gray-300 transition-colors hover:border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-zinc-800 px-3 py-1.5 text-xs font-medium text-neutral-700 dark:text-gray-300 transition-colors hover:border-brand-primary/25 dark:border-brand-primary/40 hover:bg-brand-tint hover:text-brand-primary"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                           Editar
@@ -292,7 +292,7 @@ export function LinkManager() {
                           onClick={() => link.id && handleDelete(link.id, link.title)}
                           disabled={deletingId === link.id}
                           aria-label={`Eliminar ${link.title}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-600 transition-colors hover:bg-red-50 dark:bg-red-950/40 disabled:opacity-50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

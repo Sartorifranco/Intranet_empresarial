@@ -23,8 +23,13 @@ export type AuditAction =
   | 'permission_revoke'
   | 'role_change'
   | 'managed_areas_change'
+  | 'member_areas_change'
+  | 'classification_change'
+  | 'authorized_copy'
+  | 'approval'
+  | 'board_view'
 
-export type AuditTargetType = 'folder' | 'file' | 'resource' | 'user'
+export type AuditTargetType = 'folder' | 'file' | 'resource' | 'user' | 'board'
 
 export interface AuditLogEntry {
   id?: string

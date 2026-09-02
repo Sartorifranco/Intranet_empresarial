@@ -120,12 +120,15 @@ export function Home() {
               alt="Logo Bacar"
               className="mb-6 h-14 w-14 object-contain"
             />
+            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-primary">
+              BacarNet
+            </p>
             <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-gray-100 sm:text-4xl">
-              Intranet Bacar
+              Simplificando tu trabajo diario
             </h1>
             <p className="mt-3 max-w-md text-base leading-relaxed text-neutral-600 dark:text-gray-400">
-              Información del día, cumpleaños del mes y acceso seguro a la intranet
-              de la empresa.
+              Información del día, cumpleaños del mes y acceso seguro a las
+              herramientas de la empresa.
             </p>
           </header>
 
@@ -135,16 +138,16 @@ export function Home() {
       </section>
 
       {/* Mitad derecha — acceso */}
-      <section className="flex flex-1 flex-col bg-neutral-950 lg:w-1/2 lg:max-w-[50%]">
+      <section className="auth-panel flex flex-1 flex-col lg:w-1/2 lg:max-w-[50%]">
         <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10 lg:px-14">
           {loading ? (
             <div className="flex flex-col items-center gap-3 text-neutral-400">
-              <Loader2 className="h-8 w-8 animate-spin text-red-800" />
+              <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
               <p className="text-sm">Verificando sesión...</p>
             </div>
           ) : user ? (
             <div className="w-full max-w-sm text-center">
-              <p className="mb-2 text-sm font-medium uppercase tracking-widest text-red-800">
+              <p className="mb-2 text-sm font-medium uppercase tracking-widest text-brand-primary">
                 Sesión activa
               </p>
               <h2 className="mb-3 text-2xl font-bold text-white sm:text-3xl">
@@ -171,7 +174,7 @@ export function Home() {
                 </p>
               </div>
 
-              <div className="mb-6 flex rounded-lg bg-neutral-900 p-1">
+              <div className="mb-6 flex rounded-lg auth-panel-elevated p-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -180,7 +183,7 @@ export function Home() {
                   }}
                   className={`flex-1 rounded-md py-2.5 text-sm font-medium transition-colors ${
                     activeTab === 'login'
-                      ? 'bg-red-900 text-white'
+                      ? 'bg-brand-primary text-white'
                       : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
@@ -194,7 +197,7 @@ export function Home() {
                   }}
                   className={`flex-1 rounded-md py-2.5 text-sm font-medium transition-colors ${
                     activeTab === 'register'
-                      ? 'bg-red-900 text-white'
+                      ? 'bg-brand-primary text-white'
                       : 'text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
@@ -203,7 +206,7 @@ export function Home() {
               </div>
 
               {error && (
-                <div className="mb-4 rounded-lg border border-red-900/50 bg-red-950/50 px-4 py-3 text-sm text-red-300">
+                <div className="mb-4 rounded-lg alert-error px-4 py-3 text-sm">
                   {error}
                 </div>
               )}
@@ -225,7 +228,7 @@ export function Home() {
                       <div className="w-full border-t border-neutral-700" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="bg-neutral-950 px-3 text-neutral-500">O</span>
+                      <span className="auth-panel px-3 text-neutral-500">O</span>
                     </div>
                   </div>
 
@@ -244,7 +247,7 @@ export function Home() {
                       autoComplete="email"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 input-dark-focus focus:outline-none"
                       placeholder="usuario@empresa.com"
                     />
                   </div>
@@ -263,7 +266,7 @@ export function Home() {
                       autoComplete="current-password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 input-dark-focus focus:outline-none"
                       placeholder="••••••••"
                     />
                   </div>
@@ -274,7 +277,7 @@ export function Home() {
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 accent-red-900 dark:border-zinc-600 dark:bg-zinc-800"
+                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 accent-brand dark:border-zinc-600 dark:bg-zinc-800"
                     />
                     <label
                       htmlFor="login-remember"
@@ -309,7 +312,7 @@ export function Home() {
                       autoComplete="name"
                       value={registerName}
                       onChange={(e) => setRegisterName(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 input-dark-focus focus:outline-none"
                       placeholder="Juan Pérez"
                     />
                   </div>
@@ -327,7 +330,7 @@ export function Home() {
                       required
                       value={birthDate}
                       onChange={(e) => setBirthDate(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white [color-scheme:dark] focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white [color-scheme:dark] input-dark-focus focus:outline-none"
                     />
                   </div>
 
@@ -345,7 +348,7 @@ export function Home() {
                       autoComplete="email"
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 input-dark-focus focus:outline-none"
                       placeholder="usuario@empresa.com"
                     />
                   </div>
@@ -365,7 +368,7 @@ export function Home() {
                       minLength={6}
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white placeholder:text-neutral-500 input-dark-focus focus:outline-none"
                       placeholder="Mínimo 6 caracteres"
                     />
                   </div>
@@ -382,7 +385,7 @@ export function Home() {
                       required
                       value={registerDepartment}
                       onChange={(e) => setRegisterDepartment(e.target.value)}
-                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white focus:border-red-800 focus:outline-none focus:ring-2 focus:ring-red-900/40"
+                      className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2.5 text-sm text-white input-dark-focus focus:outline-none"
                     >
                       {departments.map((dept) => (
                         <option key={dept} value={dept}>

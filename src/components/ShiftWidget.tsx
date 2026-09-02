@@ -55,7 +55,7 @@ export function ShiftWidget() {
               <button
                 type="button"
                 onClick={() => setWeekKey(getWeekKey())}
-                className="rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand-primary hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand-primary hover:bg-brand-tint"
               >
                 Hoy
               </button>
@@ -79,7 +79,7 @@ export function ShiftWidget() {
             <div className="h-16 animate-pulse rounded-xl bg-neutral-100 dark:bg-zinc-800" />
           </div>
         ) : error ? (
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-danger">
             No se pudieron cargar los turnos.
           </p>
         ) : (

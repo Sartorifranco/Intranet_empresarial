@@ -210,7 +210,7 @@ export function BannerManager() {
               type="checkbox"
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
-              className="h-4 w-4 rounded border-neutral-300 dark:border-zinc-700 text-brand-primary focus:ring-red-900/20"
+              className="h-4 w-4 rounded border-neutral-300 dark:border-zinc-700 text-brand-primary focus:ring-brand-primary/20"
             />
             <span className="text-sm text-neutral-700 dark:text-gray-300">
               Activar este banner al guardar
@@ -262,7 +262,7 @@ export function BannerManager() {
             <div className="spinner-brand h-8 w-8 animate-spin rounded-full border-4" />
           </div>
         ) : error ? (
-          <p className="px-6 py-16 text-center text-sm text-red-600">{error}</p>
+          <p className="px-6 py-16 text-center text-sm text-danger">{error}</p>
         ) : banners.length === 0 ? (
           <p className="px-6 py-16 text-center text-sm text-neutral-500 dark:text-gray-400">
             Aún no hay banners creados.
@@ -304,7 +304,7 @@ export function BannerManager() {
                         disabled={togglingId === banner.id}
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
                           banner.active
-                            ? 'bg-red-50 dark:bg-red-950/40 text-brand-primary ring-1 ring-red-100'
+                            ? 'bg-brand-tint text-brand-primary ring-1 ring-brand-primary/15'
                             : 'bg-neutral-100 dark:bg-zinc-800 text-neutral-600 dark:text-gray-400 hover:bg-neutral-200'
                         }`}
                       >
@@ -332,7 +332,7 @@ export function BannerManager() {
                           onClick={() => banner.id && handleDelete(banner.id, banner.title)}
                           disabled={deletingId === banner.id}
                           aria-label={`Eliminar ${banner.title}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-600 hover:bg-red-50 dark:bg-red-950/40 disabled:opacity-50"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-danger hover:bg-brand-tint disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

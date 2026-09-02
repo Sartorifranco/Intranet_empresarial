@@ -1,6 +1,8 @@
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { HomeBoardsSection } from '../components/home/HomeBoardsSection'
+import { WelcomeHeader } from '../components/home/WelcomeHeader'
 import { BannerPopup } from '../components/BannerPopup'
 import { BirthdayWidget } from '../components/BirthdayWidget'
 import { CalendarWidget } from '../components/CalendarWidget'
@@ -51,9 +53,9 @@ function CompactAppCard({ app }: { app: CoreApp }) {
       href={app.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-primary/35 hover:shadow-md sm:gap-4 sm:p-4"
+      className="group flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-neutral-200 bg-white p-3.5 transition-colors hover:border-brand-primary/35 dark:border-zinc-800 dark:bg-zinc-900 sm:gap-4 sm:p-4"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 dark:bg-zinc-800 text-brand-primary transition-colors group-hover:bg-red-50 dark:bg-red-950/40 sm:h-12 sm:w-12">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 dark:bg-zinc-800 text-brand-primary transition-colors group-hover:bg-brand-tint sm:h-12 sm:w-12">
         {app.imageUrl ? (
           <img src={app.imageUrl} alt="" className="h-6 w-6 object-contain sm:h-7 sm:w-7" />
         ) : (
@@ -70,7 +72,7 @@ function CompactAppCard({ app }: { app: CoreApp }) {
 }
 
 export function IntranetHub() {
-  const { userProfile, profileLoading } = useAuth()
+  const { userProfile, profileLoading, refreshProfile } = useAuth()
   const { settings } = useGlobalSettings()
   const [coreApps, setCoreApps] = useState<CoreApp[]>([])
   const [coreAppsLoading, setCoreAppsLoading] = useState(true)
@@ -147,22 +149,16 @@ export function IntranetHub() {
 
       <div className="grid w-full grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-12 lg:items-start">
         <div className="min-w-0 space-y-6 sm:space-y-8 lg:col-span-8 xl:col-span-9">
-          <header className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-5 dark:border-zinc-800 dark:bg-zinc-950/80 sm:px-6 sm:py-6 lg:px-8">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-primary">
-              Intranet
-            </p>
-            <h1 className="break-words text-2xl font-bold tracking-tight text-neutral-900 dark:text-gray-100 sm:text-3xl">
-              Hola, {displayName}
-            </h1>
-            {userProfile?.department && (
-              <p className="mt-1.5 truncate text-sm text-neutral-500 dark:text-gray-400">
-                {userProfile.department}
-              </p>
-            )}
-          </header>
+          {userProfile && (
+            <WelcomeHeader
+              userProfile={userProfile}
+              displayName={displayName}
+              onPreferencesUpdated={refreshProfile}
+            />
+          )}
 
           {(coreAppsLoading || pinnedCoreApps.length > 0 || coreAppsError) && (
-            <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 lg:p-8">
+            <section className="overflow-hidden rounded-xl border border-neutral-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 lg:p-8">
               <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold text-neutral-900 dark:text-gray-100">
@@ -176,7 +172,7 @@ export function IntranetHub() {
                 </div>
                 <Link
                   to="/accesos-directos"
-                  className="inline-flex w-full items-center justify-center gap-1.5 text-sm font-semibold text-brand-primary transition-colors hover:text-red-950 sm:w-auto sm:justify-start"
+                  className="inline-flex w-full items-center justify-center gap-1.5 text-sm font-semibold text-brand-primary transition-colors hover:opacity-90 sm:w-auto sm:justify-start"
                 >
                   Ver todos los accesos
                   <ArrowRight className="h-4 w-4 shrink-0" />
@@ -186,7 +182,7 @@ export function IntranetHub() {
               {coreAppsLoading ? (
                 <ToolsSkeleton />
               ) : coreAppsError ? (
-                <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+                <p className="rounded-lg alert-error px-4 py-3 text-sm text-danger">
                   No se pudieron cargar las aplicaciones.
                 </p>
               ) : pinnedCoreApps.length === 0 ? (
@@ -205,6 +201,8 @@ export function IntranetHub() {
               )}
             </section>
           )}
+
+          <HomeBoardsSection />
 
           <ExternalNewsWidget />
 

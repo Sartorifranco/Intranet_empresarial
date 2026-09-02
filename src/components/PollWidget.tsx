@@ -142,7 +142,7 @@ export function PollWidget() {
                 type="button"
                 onClick={() => handleVote(index)}
                 disabled={voting}
-                className="w-full rounded-lg border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-3 text-left text-sm font-medium break-words text-neutral-800 dark:text-gray-100 transition-all hover:border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
+                className="w-full rounded-lg border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-3 text-left text-sm font-medium break-words text-neutral-800 dark:text-gray-100 transition-all hover:border-brand-primary/25 dark:border-brand-primary/40 hover:bg-brand-tint hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
               >
                 {option}
               </button>

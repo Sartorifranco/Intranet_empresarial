@@ -165,7 +165,7 @@ export function CalendarWidget() {
     <section className="card-minimal overflow-hidden dark:bg-zinc-900">
       <div className="p-4 lg:p-5">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-950/40 text-red-400">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-tint text-brand-primary">
             <Calendar className="h-5 w-5" />
           </span>
           <div className="min-w-0">
@@ -187,7 +187,7 @@ export function CalendarWidget() {
               type="button"
               onClick={handleConnectGoogle}
               disabled={connecting}
-              className="inline-flex w-full items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-red-900/30 hover:bg-neutral-50 hover:text-red-900 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-red-500/40 dark:hover:bg-zinc-700 dark:hover:text-red-400"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-brand-primary/30 hover:bg-neutral-50 hover:text-brand-primary disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:bg-zinc-700 dark:hover:text-brand-primary"
             >
               {connecting ? 'Conectando...' : 'Conectar Google'}
             </button>
@@ -207,7 +207,7 @@ export function CalendarWidget() {
                 key={`${event.startTime}-${event.summary}-${index}`}
                 className="flex items-start gap-3 rounded-lg border border-neutral-100 bg-neutral-50/80 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-800/40"
               >
-                <span className="shrink-0 pt-0.5 text-xs font-semibold tabular-nums text-red-900 dark:text-red-400">
+                <span className="shrink-0 pt-0.5 text-xs font-semibold tabular-nums text-brand-primary">
                   {event.startTime}
                 </span>
                 <span className="min-w-0 flex-1 text-sm text-neutral-800 dark:text-gray-200">
@@ -222,7 +222,7 @@ export function CalendarWidget() {
           href="https://calendar.google.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-red-900/30 hover:bg-neutral-50 hover:text-red-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-red-500/40 dark:hover:bg-zinc-700 dark:hover:text-red-400"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-brand-primary/30 hover:bg-neutral-50 hover:text-brand-primary dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:bg-zinc-700 dark:hover:text-brand-primary"
         >
           Abrir Calendar
           <ExternalLink className="h-4 w-4" />

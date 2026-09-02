@@ -1,0 +1,788 @@
+{
+  "generatedAt": "2026-09-02T14:14:30.632Z",
+  "project": "bacar-web",
+  "folders": {
+    "total": 30,
+    "rootCount": 23,
+    "nestedCount": 7,
+    "roots": [
+      {
+        "id": "SNo0SnbELRHX4HBjrxoo",
+        "name": "Adm Seguridad Privada",
+        "parentFolderId": null,
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:53:58.235Z"
+      },
+      {
+        "id": "GgnU5ZugU1FO0wlOaXUV",
+        "name": "Administracion",
+        "parentFolderId": null,
+        "governingAreaId": "GgnU5ZugU1FO0wlOaXUV",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:37.092Z"
+      },
+      {
+        "id": "n6UcEFiJCSPQZnQESape",
+        "name": "Administracion de Personal",
+        "parentFolderId": null,
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:48:20.737Z"
+      },
+      {
+        "id": "E0b7GPU8UjCY8vkgggN7",
+        "name": "Caminos de las sierras",
+        "parentFolderId": null,
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:06:22.550Z"
+      },
+      {
+        "id": "ilPM8NPCRq5yuK8YLKqh",
+        "name": "Comercial",
+        "parentFolderId": null,
+        "governingAreaId": "ilPM8NPCRq5yuK8YLKqh",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:37.337Z"
+      },
+      {
+        "id": "jSjSQyovcecqu9VmlvCd",
+        "name": "Compras",
+        "parentFolderId": null,
+        "governingAreaId": "jSjSQyovcecqu9VmlvCd",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:38.057Z"
+      },
+      {
+        "id": "MM25DIlzctON9kegb4MF",
+        "name": "Gerencia",
+        "parentFolderId": null,
+        "governingAreaId": "MM25DIlzctON9kegb4MF",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:39.016Z"
+      },
+      {
+        "id": "UZI1nC04of2IaBnsac69",
+        "name": "Guardia",
+        "parentFolderId": null,
+        "governingAreaId": "UZI1nC04of2IaBnsac69",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:39.288Z"
+      },
+      {
+        "id": "33JjvSPqCx7gJLS3tQTe",
+        "name": "Mantenimiento",
+        "parentFolderId": null,
+        "governingAreaId": "33JjvSPqCx7gJLS3tQTe",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:38.315Z"
+      },
+      {
+        "id": "jEQYpeJW2tlDUdSuQcPx",
+        "name": "Manuales (Procedimientos)",
+        "parentFolderId": null,
+        "governingAreaId": "jEQYpeJW2tlDUdSuQcPx",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:19:25.634Z"
+      },
+      {
+        "id": "ExLUAaL801r6h5RuRqAK",
+        "name": "Marketing",
+        "parentFolderId": null,
+        "governingAreaId": "ExLUAaL801r6h5RuRqAK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:43.137Z"
+      },
+      {
+        "id": "WrZbkgWFDw8wt08KOZrt",
+        "name": "Monitoreo",
+        "parentFolderId": null,
+        "governingAreaId": "WrZbkgWFDw8wt08KOZrt",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:39.981Z"
+      },
+      {
+        "id": "FLuH9quepVppeJqG4DaG",
+        "name": "Monitoreo - Guardia",
+        "parentFolderId": null,
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:56:51.342Z"
+      },
+      {
+        "id": "a36R9jwN4m47Ftn3wGCp",
+        "name": "Operaciones",
+        "parentFolderId": null,
+        "governingAreaId": "a36R9jwN4m47Ftn3wGCp",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:40.257Z"
+      },
+      {
+        "id": "6vPWuL3OgDznbWoPuacd",
+        "name": "Orden de compra",
+        "parentFolderId": null,
+        "governingAreaId": "6vPWuL3OgDznbWoPuacd",
+        "allowedUsersCount": 1,
+        "createdAt": "2026-06-30T14:24:29.088Z"
+      },
+      {
+        "id": "h22XJ3GkuK6nkddQdLvn",
+        "name": "RRHH",
+        "parentFolderId": null,
+        "governingAreaId": "h22XJ3GkuK6nkddQdLvn",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:40.957Z"
+      },
+      {
+        "id": "RiT9rO8z0cvSEBU6CR3v",
+        "name": "Seguridad Privada",
+        "parentFolderId": null,
+        "governingAreaId": "RiT9rO8z0cvSEBU6CR3v",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:41.220Z"
+      },
+      {
+        "id": "mnCpjJYbw761Mae06MQs",
+        "name": "Sistemas",
+        "parentFolderId": null,
+        "governingAreaId": "mnCpjJYbw761Mae06MQs",
+        "allowedUsersCount": 2,
+        "createdAt": "2026-08-20T18:55:04.221Z"
+      },
+      {
+        "id": "r7QVKsrSiqDWC8DrXCac",
+        "name": "Sistemas",
+        "parentFolderId": null,
+        "governingAreaId": "r7QVKsrSiqDWC8DrXCac",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:41.906Z"
+      },
+      {
+        "id": "hgMRKqW1vaLElwr9O7Wi",
+        "name": "Tesoreria",
+        "parentFolderId": null,
+        "governingAreaId": "hgMRKqW1vaLElwr9O7Wi",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:42.195Z"
+      },
+      {
+        "id": "OWWnpfsRRx0XQ6FCqlOa",
+        "name": "UIF",
+        "parentFolderId": null,
+        "governingAreaId": "OWWnpfsRRx0XQ6FCqlOa",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-09-01T14:27:42.868Z"
+      },
+      {
+        "id": "yKI3EZmt80MfTyfAdIz5",
+        "name": "UIF",
+        "parentFolderId": null,
+        "governingAreaId": "yKI3EZmt80MfTyfAdIz5",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:52:27.160Z"
+      },
+      {
+        "id": "KcPOCBUsTp2ia2C18ppK",
+        "name": "Visitas",
+        "parentFolderId": null,
+        "governingAreaId": "KcPOCBUsTp2ia2C18ppK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:03:21.143Z"
+      }
+    ],
+    "nested": [
+      {
+        "id": "FdfdoN4HMFo8teU0bTXi",
+        "name": "Carga Horaria",
+        "parentFolderId": "SNo0SnbELRHX4HBjrxoo",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:55:11.892Z"
+      },
+      {
+        "id": "TzAwvLR0hN7wxcYg5kJr",
+        "name": "Carga y Consulta de personal para conducir",
+        "parentFolderId": "n6UcEFiJCSPQZnQESape",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:48:37.551Z"
+      },
+      {
+        "id": "WCKCT7cVQiaJ03JLDaLr",
+        "name": "Curriculum y Perfiles",
+        "parentFolderId": "n6UcEFiJCSPQZnQESape",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:50:27.857Z"
+      },
+      {
+        "id": "2kUzi9ZAao1u4OdpyvX4",
+        "name": "Legajos Online",
+        "parentFolderId": "SNo0SnbELRHX4HBjrxoo",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:54:14.757Z"
+      },
+      {
+        "id": "4eKzY67uMiD9uZWXOjpZ",
+        "name": "Novedades",
+        "parentFolderId": "E0b7GPU8UjCY8vkgggN7",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:16:18.165Z"
+      },
+      {
+        "id": "m0UlRTETr8tunf6X5aWX",
+        "name": "Puesto Guardia",
+        "parentFolderId": "E0b7GPU8UjCY8vkgggN7",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:06:33.061Z"
+      },
+      {
+        "id": "6bsJxauzHvdUToltKnIl",
+        "name": "Visitas",
+        "parentFolderId": "E0b7GPU8UjCY8vkgggN7",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:17:55.119Z"
+      }
+    ],
+    "purgePlan": {
+      "keep": [
+        "SNo0SnbELRHX4HBjrxoo",
+        "GgnU5ZugU1FO0wlOaXUV",
+        "n6UcEFiJCSPQZnQESape",
+        "E0b7GPU8UjCY8vkgggN7",
+        "ilPM8NPCRq5yuK8YLKqh",
+        "jSjSQyovcecqu9VmlvCd",
+        "MM25DIlzctON9kegb4MF",
+        "UZI1nC04of2IaBnsac69",
+        "33JjvSPqCx7gJLS3tQTe",
+        "jEQYpeJW2tlDUdSuQcPx",
+        "ExLUAaL801r6h5RuRqAK",
+        "WrZbkgWFDw8wt08KOZrt",
+        "FLuH9quepVppeJqG4DaG",
+        "a36R9jwN4m47Ftn3wGCp",
+        "6vPWuL3OgDznbWoPuacd",
+        "h22XJ3GkuK6nkddQdLvn",
+        "RiT9rO8z0cvSEBU6CR3v",
+        "mnCpjJYbw761Mae06MQs",
+        "r7QVKsrSiqDWC8DrXCac",
+        "hgMRKqW1vaLElwr9O7Wi",
+        "OWWnpfsRRx0XQ6FCqlOa",
+        "yKI3EZmt80MfTyfAdIz5",
+        "KcPOCBUsTp2ia2C18ppK"
+      ],
+      "deleteNestedIds": [
+        "FdfdoN4HMFo8teU0bTXi",
+        "TzAwvLR0hN7wxcYg5kJr",
+        "WCKCT7cVQiaJ03JLDaLr",
+        "2kUzi9ZAao1u4OdpyvX4",
+        "4eKzY67uMiD9uZWXOjpZ",
+        "m0UlRTETr8tunf6X5aWX",
+        "6bsJxauzHvdUToltKnIl"
+      ]
+    }
+  },
+  "resourceItems": {
+    "total": 48,
+    "items": [
+      {
+        "id": "R7mopUT8RM6LJoOBiBk2",
+        "name": "Autorizacion de visitas",
+        "type": "link",
+        "folderId": "KcPOCBUsTp2ia2C18ppK",
+        "governingAreaId": "KcPOCBUsTp2ia2C18ppK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:05:44.124Z"
+      },
+      {
+        "id": "vAeA9rbyXD00cD0xPUuB",
+        "name": "Autorizados",
+        "type": "link",
+        "folderId": "KcPOCBUsTp2ia2C18ppK",
+        "governingAreaId": "KcPOCBUsTp2ia2C18ppK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:04:34.647Z"
+      },
+      {
+        "id": "2F3s8knMd7NAWUKI5hxB",
+        "name": "Carga de Documentacion Personal",
+        "type": "form",
+        "folderId": "TzAwvLR0hN7wxcYg5kJr",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:49:05.925Z"
+      },
+      {
+        "id": "EvpZMlNIwstcW8xktNX9",
+        "name": "Carga Horaria E",
+        "type": "link",
+        "folderId": "FdfdoN4HMFo8teU0bTXi",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:55:53.155Z"
+      },
+      {
+        "id": "QI3jqCzEWpUbfCZNfCmv",
+        "name": "Carga Horaria G",
+        "type": "link",
+        "folderId": "FdfdoN4HMFo8teU0bTXi",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:55:34.735Z"
+      },
+      {
+        "id": "DFnQ6smpRsbnflX0mC9k",
+        "name": "Carga Horaria Loteria",
+        "type": "link",
+        "folderId": "FdfdoN4HMFo8teU0bTXi",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:56:05.765Z"
+      },
+      {
+        "id": "qPxlUvo3juJJOqUg0OvS",
+        "name": "Carga novedades Guardia",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:00:54.017Z"
+      },
+      {
+        "id": "f3Q2ZVexV2eoyDwotYuw",
+        "name": "Carga Novedades Monitoreo",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:01:52.026Z"
+      },
+      {
+        "id": "3W5pJCd6JWPrxlOXjauC",
+        "name": "Consulta de Curriculum",
+        "type": "link",
+        "folderId": "WCKCT7cVQiaJ03JLDaLr",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:51:12.546Z"
+      },
+      {
+        "id": "biet54aREeMRAiZmqSYD",
+        "name": "Contacto con RRHH",
+        "type": "link",
+        "folderId": "n6UcEFiJCSPQZnQESape",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:51:47.393Z"
+      },
+      {
+        "id": "zriH0mMSQwT4thRYXQdn",
+        "name": "Control Auxilios",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:57:47.760Z"
+      },
+      {
+        "id": "gbkB3cSUAk0nTUjwK1hO",
+        "name": "Control de patentes",
+        "type": "link",
+        "folderId": "KcPOCBUsTp2ia2C18ppK",
+        "governingAreaId": "KcPOCBUsTp2ia2C18ppK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:06:07.484Z"
+      },
+      {
+        "id": "3bztlJmo1w12p3mynK5E",
+        "name": "Control Flota",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:58:04.916Z"
+      },
+      {
+        "id": "PYuCB6vYvT8x8PtnkBDh",
+        "name": "Control Particulares",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:58:20.534Z"
+      },
+      {
+        "id": "k6bw0r6R72BPBsN4jlMf",
+        "name": "Control UBL",
+        "type": "form",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:57:28.893Z"
+      },
+      {
+        "id": "lICggnwY4x1XDU3yzAU4",
+        "name": "Ingreso - Egreso personal",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:08:01.723Z"
+      },
+      {
+        "id": "HEkY8jvQQJDxBd6HaNqQ",
+        "name": "Ingreso - Egreso porton II",
+        "type": "form",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:08:28.227Z"
+      },
+      {
+        "id": "GYE3ewka2EK0NgrVrCp6",
+        "name": "Ingreso - Egreso Vehiculos",
+        "type": "form",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:08:53.722Z"
+      },
+      {
+        "id": "y5IGXUj346RzlDqEjBdk",
+        "name": "Ingreso Personal Externo",
+        "type": "form",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:09:36.906Z"
+      },
+      {
+        "id": "K6nP1Qg5LeJHCJJHhyMY",
+        "name": "Ingreso Visitas",
+        "type": "form",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:09:11.315Z"
+      },
+      {
+        "id": "0MtwQnD8mOxNeOO2twRP",
+        "name": "Listado Control de Auxilios",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:59:33.694Z"
+      },
+      {
+        "id": "jN8QGBLCV7T6rP5Fyqtq",
+        "name": "Listado Control Flota",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:59:53.963Z"
+      },
+      {
+        "id": "g3skhIHYuvI9e5yIbYHz",
+        "name": "Listado Control Particulares",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:00:12.400Z"
+      },
+      {
+        "id": "nXSgIzF7bsVKYp4L69z7",
+        "name": "Listado Control UBL",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:58:59.518Z"
+      },
+      {
+        "id": "EJNYKxwNmu1FqkVtoIlI",
+        "name": "Login LOL",
+        "type": "link",
+        "folderId": "2kUzi9ZAao1u4OdpyvX4",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:54:36.959Z"
+      },
+      {
+        "id": "YIttPuoiXsrss3n8mQFK",
+        "name": "Manual Smart PSS",
+        "type": "drive",
+        "folderId": "jEQYpeJW2tlDUdSuQcPx",
+        "governingAreaId": "jEQYpeJW2tlDUdSuQcPx",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:23:00.440Z"
+      },
+      {
+        "id": "hxIC2IWp4owDVqSd9iAd",
+        "name": "Novedades Predio",
+        "type": "form",
+        "folderId": "4eKzY67uMiD9uZWXOjpZ",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:16:40.015Z"
+      },
+      {
+        "id": "TGdcwMGGLm72czj8JObP",
+        "name": "Novedades Vehiculos CASISA",
+        "type": "form",
+        "folderId": "4eKzY67uMiD9uZWXOjpZ",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:17:00.160Z"
+      },
+      {
+        "id": "90hxhbtkJT8sOxtxHNQN",
+        "name": "Orden de compra",
+        "type": "form",
+        "folderId": "6vPWuL3OgDznbWoPuacd",
+        "governingAreaId": "6vPWuL3OgDznbWoPuacd",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:24:43.270Z"
+      },
+      {
+        "id": "syRVwtMkY9sp0VBky1fS",
+        "name": "Paso a Paso para marcar",
+        "type": "link",
+        "folderId": "2kUzi9ZAao1u4OdpyvX4",
+        "governingAreaId": "SNo0SnbELRHX4HBjrxoo",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:54:57.192Z"
+      },
+      {
+        "id": "h02GdJC52biKEaiHCnM7",
+        "name": "Personal autorizado para conducir",
+        "type": "link",
+        "folderId": "TzAwvLR0hN7wxcYg5kJr",
+        "governingAreaId": "n6UcEFiJCSPQZnQESape",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:49:58.607Z"
+      },
+      {
+        "id": "OylcgmGBfCR8DyIvfEtc",
+        "name": "Procedimiento alta de clientes",
+        "type": "link",
+        "folderId": "yKI3EZmt80MfTyfAdIz5",
+        "governingAreaId": "yKI3EZmt80MfTyfAdIz5",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T13:53:29.097Z"
+      },
+      {
+        "id": "BGSox5tkyy3wTaF7lE4H",
+        "name": "Procedimiento para Grupo Electrogeno",
+        "type": "drive",
+        "folderId": "jEQYpeJW2tlDUdSuQcPx",
+        "governingAreaId": "jEQYpeJW2tlDUdSuQcPx",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:20:04.326Z"
+      },
+      {
+        "id": "IffL5xPLXen9ftGj6Rz2",
+        "name": "Resolucion de problemas basicos",
+        "type": "drive",
+        "folderId": "jEQYpeJW2tlDUdSuQcPx",
+        "governingAreaId": "jEQYpeJW2tlDUdSuQcPx",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:23:20.519Z"
+      },
+      {
+        "id": "RwqjnWYcqrXn0rk5uV8q",
+        "name": "Solicitud de visita",
+        "type": "form",
+        "folderId": "KcPOCBUsTp2ia2C18ppK",
+        "governingAreaId": "KcPOCBUsTp2ia2C18ppK",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:05:03.698Z"
+      },
+      {
+        "id": "ZcY9Xbhb4JBz8IyDgj8A",
+        "name": "Uso Basico PC",
+        "type": "drive",
+        "folderId": "jEQYpeJW2tlDUdSuQcPx",
+        "governingAreaId": "jEQYpeJW2tlDUdSuQcPx",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:20:21.585Z"
+      },
+      {
+        "id": "wRtgXmIfNQGY1V0NRuos",
+        "name": "Ver ingreso - egreso personal",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:09:57.909Z"
+      },
+      {
+        "id": "8HDJ4dPDNIeoSan9Qnld",
+        "name": "Ver Ingreso - Egreso Porton II",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:15:01.537Z"
+      },
+      {
+        "id": "DMOrcptDHCa6l2OYYnK0",
+        "name": "Ver Ingreso - Egreso Vehiculos",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:15:27.269Z"
+      },
+      {
+        "id": "jq7Bu6iwQZPVNvndwMq6",
+        "name": "Ver Novedades Auxiliar Monitoreo",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:03:02.158Z"
+      },
+      {
+        "id": "mhK856suNjeQ3aKWBUZu",
+        "name": "Ver Novedades Guardia",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:01:24.158Z"
+      },
+      {
+        "id": "oreauM7L2X4bt2JBeTu3",
+        "name": "Ver Novedades Monitoreo",
+        "type": "link",
+        "folderId": "FLuH9quepVppeJqG4DaG",
+        "governingAreaId": "FLuH9quepVppeJqG4DaG",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:02:11.963Z"
+      },
+      {
+        "id": "qkChOK9RUj2U6iCYjfbT",
+        "name": "Ver Novedades Predio",
+        "type": "link",
+        "folderId": "4eKzY67uMiD9uZWXOjpZ",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:17:33.971Z"
+      },
+      {
+        "id": "Bhi4pmZnuxwYfX8uWbCQ",
+        "name": "Ver Novedades Vehiculos",
+        "type": "link",
+        "folderId": "4eKzY67uMiD9uZWXOjpZ",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:17:15.638Z"
+      },
+      {
+        "id": "bsLZFW9PwTtQC47xbExm",
+        "name": "Ver Personal Externo",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:15:59.888Z"
+      },
+      {
+        "id": "NrgHoQW5JDKUyjORLBNy",
+        "name": "Ver Visitas",
+        "type": "link",
+        "folderId": "m0UlRTETr8tunf6X5aWX",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:15:41.297Z"
+      },
+      {
+        "id": "IvxSkruzQFufdjNoep2t",
+        "name": "Ver Visitas/Personal tercerizado",
+        "type": "link",
+        "folderId": "6bsJxauzHvdUToltKnIl",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:18:49.355Z"
+      },
+      {
+        "id": "fKuvVGibTg1KD4j54uxv",
+        "name": "Visitas/Personal tercerizado",
+        "type": "form",
+        "folderId": "6bsJxauzHvdUToltKnIl",
+        "governingAreaId": "E0b7GPU8UjCY8vkgggN7",
+        "allowedUsersCount": 0,
+        "createdAt": "2026-06-30T14:18:29.037Z"
+      }
+    ],
+    "purgePlan": {
+      "deleteAllIds": [
+        "R7mopUT8RM6LJoOBiBk2",
+        "vAeA9rbyXD00cD0xPUuB",
+        "2F3s8knMd7NAWUKI5hxB",
+        "EvpZMlNIwstcW8xktNX9",
+        "QI3jqCzEWpUbfCZNfCmv",
+        "DFnQ6smpRsbnflX0mC9k",
+        "qPxlUvo3juJJOqUg0OvS",
+        "f3Q2ZVexV2eoyDwotYuw",
+        "3W5pJCd6JWPrxlOXjauC",
+        "biet54aREeMRAiZmqSYD",
+        "zriH0mMSQwT4thRYXQdn",
+        "gbkB3cSUAk0nTUjwK1hO",
+        "3bztlJmo1w12p3mynK5E",
+        "PYuCB6vYvT8x8PtnkBDh",
+        "k6bw0r6R72BPBsN4jlMf",
+        "lICggnwY4x1XDU3yzAU4",
+        "HEkY8jvQQJDxBd6HaNqQ",
+        "GYE3ewka2EK0NgrVrCp6",
+        "y5IGXUj346RzlDqEjBdk",
+        "K6nP1Qg5LeJHCJJHhyMY",
+        "0MtwQnD8mOxNeOO2twRP",
+        "jN8QGBLCV7T6rP5Fyqtq",
+        "g3skhIHYuvI9e5yIbYHz",
+        "nXSgIzF7bsVKYp4L69z7",
+        "EJNYKxwNmu1FqkVtoIlI",
+        "YIttPuoiXsrss3n8mQFK",
+        "hxIC2IWp4owDVqSd9iAd",
+        "TGdcwMGGLm72czj8JObP",
+        "90hxhbtkJT8sOxtxHNQN",
+        "syRVwtMkY9sp0VBky1fS",
+        "h02GdJC52biKEaiHCnM7",
+        "OylcgmGBfCR8DyIvfEtc",
+        "BGSox5tkyy3wTaF7lE4H",
+        "IffL5xPLXen9ftGj6Rz2",
+        "RwqjnWYcqrXn0rk5uV8q",
+        "ZcY9Xbhb4JBz8IyDgj8A",
+        "wRtgXmIfNQGY1V0NRuos",
+        "8HDJ4dPDNIeoSan9Qnld",
+        "DMOrcptDHCa6l2OYYnK0",
+        "jq7Bu6iwQZPVNvndwMq6",
+        "mhK856suNjeQ3aKWBUZu",
+        "oreauM7L2X4bt2JBeTu3",
+        "qkChOK9RUj2U6iCYjfbT",
+        "Bhi4pmZnuxwYfX8uWbCQ",
+        "bsLZFW9PwTtQC47xbExm",
+        "NrgHoQW5JDKUyjORLBNy",
+        "IvxSkruzQFufdjNoep2t",
+        "fKuvVGibTg1KD4j54uxv"
+      ]
+    }
+  },
+  "sharedFiles": {
+    "note": "Solo auditoría informativa — no se borra en esta pasada",
+    "total": 0,
+    "withUpdatedAt": 0,
+    "recentUpdatedAtWithinDays": 0,
+    "recentWindowDays": 180,
+    "newestUpdatedAt": null,
+    "newestTitle": null,
+    "docs": []
+  }
+}

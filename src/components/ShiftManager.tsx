@@ -238,7 +238,7 @@ export function ShiftManager() {
               <button
                 type="button"
                 onClick={() => setWeekKey(getWeekKey())}
-                className="ml-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-primary hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="ml-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-primary hover:bg-brand-tint"
               >
                 Actual
               </button>
@@ -357,7 +357,7 @@ export function ShiftManager() {
                 type="button"
                 onClick={handleRotationSave}
                 disabled={rotationSaving}
-                className="w-full rounded-xl border border-brand-primary px-4 py-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-red-50 disabled:opacity-60 dark:hover:bg-red-950/30"
+                className="w-full rounded-xl border border-brand-primary px-4 py-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-brand-tint disabled:opacity-60 dark:hover:bg-brand-primary-hover/30"
               >
                 {rotationSaving ? 'Guardando…' : 'Guardar rotación'}
               </button>
@@ -380,7 +380,7 @@ export function ShiftManager() {
                   key={row.weekKey}
                   className={
                     row.weekKey === weekKey
-                      ? 'bg-red-50/60 dark:bg-red-950/20'
+                      ? 'bg-brand-tint/60'
                       : 'bg-white dark:bg-zinc-900'
                   }
                 >

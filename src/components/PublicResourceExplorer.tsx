@@ -121,8 +121,8 @@ export function PublicResourceExplorer() {
       {loading ? (
         <ExplorerSkeleton />
       ) : error ? (
-        <div className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
+        <div className="rounded-lg alert-error px-6 py-12 text-center">
+          <p className="text-sm font-medium text-danger">{error}</p>
         </div>
       ) : isEmpty ? (
         <div className="rounded-lg border border-dashed border-neutral-200 dark:border-zinc-800 bg-neutral-50 dark:bg-zinc-950 px-6 py-16 text-center">
@@ -157,10 +157,10 @@ export function PublicResourceExplorer() {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col items-start rounded-lg border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 transition-all hover:border-red-200 dark:border-red-900/50 hover:shadow-sm"
+              className="group flex flex-col items-start rounded-lg border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 transition-all hover:border-brand-primary/25 dark:border-brand-primary/40 hover:shadow-sm"
             >
               <div className="mb-4 flex w-full items-start justify-between gap-2">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-neutral-50 dark:bg-zinc-950 text-neutral-700 dark:text-gray-300 ring-1 ring-neutral-100 transition-colors group-hover:ring-red-100 group-hover:text-brand-primary">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-neutral-50 dark:bg-zinc-950 text-neutral-700 dark:text-gray-300 ring-1 ring-neutral-100 transition-colors group-hover:ring-brand-primary/15 group-hover:text-brand-primary">
                   <ResourceIcon type={item.type} className="h-5 w-5" />
                 </div>
                 <ExternalLink className="h-4 w-4 shrink-0 text-neutral-300 transition-colors group-hover:text-brand-primary" />

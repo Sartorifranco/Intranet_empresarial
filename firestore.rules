@@ -49,25 +49,11 @@ service cloud.firestore {
         && areaId in callerManagedAreaIds();
     }
 
-    function folderRootAreaId(folderId) {
-      return get(/databases/$(database)/documents/folders/$(folderId)).data.rootAreaId;
-    }
-
-    // Create de area admin: rootAreaId del hijo debe coincidir EXACTO con el del padre.
-    function areaAdminCreatesUnderParent(parentId) {
-      return parentId is string
-        && exists(/databases/$(database)/documents/folders/$(parentId))
-        && folderRootAreaId(parentId) is string
-        && request.resource.data.rootAreaId == folderRootAreaId(parentId)
-        && isAreaAdminOf(request.resource.data.rootAreaId);
-    }
-
-    function canManageContent() {
-      return isAdmin() || isSuperAdmin();
-    }
-
-    function onlyFavoriteAppsUpdate() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoriteApps']);
+    function onlySelfPreferencesUpdate() {
+      let keys = request.resource.data.diff(resource.data).affectedKeys();
+      return keys.hasOnly(['favoriteApps'])
+        || keys.hasOnly(['widgetPreferences'])
+        || keys.hasOnly(['favoriteApps', 'widgetPreferences']);
     }
 
     function auditLogCreateValid() {
@@ -121,7 +107,7 @@ service cloud.firestore {
       allow list: if isSuperAdmin() || isAreaAdmin() || isAdmin();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if canManageUsers() || isAdmin()
-        || (isAuthenticated() && request.auth.uid == userId && onlyFavoriteAppsUpdate());
+        || (isAuthenticated() && request.auth.uid == userId && onlySelfPreferencesUpdate());
       allow delete: if canManageUsers() || isAdmin();
     }
 
@@ -143,17 +129,20 @@ service cloud.firestore {
       allow create, update, delete: if isSuperAdmin();
     }
 
-    // Directorio de contactos (lectura pública para cumpleaños en landing)
+    // Directorio de contactos — lectura solo autenticados
     match /contacts/{document} {
-      allow read: if true;
+      allow read: if isAuthenticated();
       allow create, update, delete: if isAdmin() || isSuperAdmin();
     }
 
-    // Archivos compartidos de Google Drive
+    // Configuración previa al primer login (solo super_admin)
+    match /pendingUserSetup/{email} {
+      allow read, create, update, delete: if isSuperAdmin();
+    }
+
+    // Colección legacy (intranet antigua). Sin uso activo; solo Admin SDK si hiciera falta.
     match /sharedFiles/{document} {
-      allow read: if isAuthenticated();
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || canManageUsers();
+      allow read, create, update, delete: if false;
     }
 
     function onlyPollVotesUpdate() {
@@ -188,57 +177,28 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Carpetas y recursos jerárquicos
-    // PENDIENTE (alta prioridad / Prompt 3.1): allow read sigue abierto a cualquier
-    // autenticado; allowedUsers / sharedWithAreaIds / rootAreaId aún no se aplican
-    // en rules de lectura (solo en frontend). No cambiar en esta pasada.
+    // Catálogo de áreas gobernantes (solo raíces). Escritura vía Admin SDK / scripts.
     match /folders/{document} {
       allow read: if isAuthenticated();
-      allow create: if canManageContent()
-        || (
-          isAreaAdmin()
-          && request.resource.data.parentFolderId != null
-          && areaAdminCreatesUnderParent(request.resource.data.parentFolderId)
-        );
-      allow update: if canManageContent()
-        || canManageUsers()
-        || (
-          isAreaAdmin()
-          && resource.data.rootAreaId is string
-          && isAreaAdminOf(resource.data.rootAreaId)
-          && request.resource.data.rootAreaId == resource.data.rootAreaId
-        );
-      allow delete: if canManageContent()
-        || (
-          isAreaAdmin()
-          && resource.data.parentFolderId != null
-          && resource.data.rootAreaId is string
-          && isAreaAdminOf(resource.data.rootAreaId)
-        );
+      allow create, update, delete: if false;
     }
 
-    match /resourceItems/{document} {
+    // Sidecar de intranet por archivo de Drive (classification, etc.).
+    // Escritura solo Admin SDK (backend). Lectura: autenticados (badge en UI).
+    match /driveFiles/{fileId} {
       allow read: if isAuthenticated();
-      allow create: if canManageContent()
-        || (
-          isAreaAdmin()
-          && request.resource.data.folderId != null
-          && areaAdminCreatesUnderParent(request.resource.data.folderId)
-        );
-      allow update: if canManageContent()
-        || canManageUsers()
-        || (
-          isAreaAdmin()
-          && resource.data.rootAreaId is string
-          && isAreaAdminOf(resource.data.rootAreaId)
-          && request.resource.data.rootAreaId == resource.data.rootAreaId
-        );
-      allow delete: if canManageContent()
-        || (
-          isAreaAdmin()
-          && resource.data.rootAreaId is string
-          && isAreaAdminOf(resource.data.rootAreaId)
-        );
+      allow create, update, delete: if false;
+    }
+
+    // Mapeo carpeta Drive de primer nivel → área intranet. Solo Admin SDK.
+    match /driveFolderAreas/{driveTopLevelFolderId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if false;
+    }
+
+    // Colección legacy (intranet antigua). Solo lectura denegada; purge vía Admin SDK.
+    match /resourceItems/{document} {
+      allow read, create, update, delete: if false;
     }
 
     // Configuración global de módulos

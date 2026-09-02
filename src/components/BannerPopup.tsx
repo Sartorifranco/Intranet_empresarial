@@ -34,7 +34,7 @@ export function BannerPopup({ banner, onClose }: BannerPopupProps) {
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg transition-colors hover:bg-red-950"
+          className="absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg transition-colors hover:bg-brand-primary-hover"
         >
           <X className="h-5 w-5" />
         </button>

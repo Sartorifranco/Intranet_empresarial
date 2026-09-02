@@ -19,7 +19,7 @@ const NEWS_CATEGORY_STYLES: Record<NewsCategory, { label: string; badge: string 
   },
   Sistemas: {
     label: 'Sistemas',
-    badge: 'bg-red-50 dark:bg-red-950/40 text-brand-primary ring-red-100',
+    badge: 'bg-brand-tint text-brand-primary ring-brand-primary/15',
   },
 }
 
@@ -29,8 +29,8 @@ const LINK_CATEGORY_STYLES: Record<
 > = {
   'Herramientas IT': {
     accent: 'text-brand-primary',
-    icon: 'bg-red-50 dark:bg-red-950/40 text-brand-primary',
-    border: 'hover:border-red-200 dark:border-red-900/50 hover:shadow-red-50',
+    icon: 'bg-brand-tint text-brand-primary',
+    border: 'hover:border-brand-primary/25 dark:border-brand-primary/40 ',
   },
   Operaciones: {
     accent: 'text-neutral-700 dark:text-gray-300',
@@ -170,8 +170,8 @@ export function Intranet() {
           {loadingNews ? (
             <NewsSkeleton />
           ) : newsError ? (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-6 py-12 text-center">
-              <p className="text-sm font-medium text-red-700 dark:text-red-300">{newsError}</p>
+            <div className="rounded-lg bg-brand-tint px-6 py-12 text-center">
+              <p className="text-sm font-medium text-danger">{newsError}</p>
             </div>
           ) : news.length === 0 ? (
             <div className="rounded-lg border border-dashed border-neutral-200 dark:border-zinc-800 bg-neutral-50 dark:bg-zinc-950 px-6 py-16 text-center">
@@ -249,7 +249,7 @@ export function Intranet() {
             {loadingLinks ? (
               <LinksSkeleton />
             ) : linksError ? (
-              <p className="rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">{linksError}</p>
+              <p className="rounded-lg bg-brand-tint px-4 py-3 text-sm text-danger">{linksError}</p>
             ) : links.length === 0 ? (
               <p className="rounded-lg border border-dashed border-neutral-200 dark:border-zinc-800 px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                 Aún no hay enlaces disponibles.

@@ -118,9 +118,9 @@ export function GoogleDriveManager() {
   return (
     <div className="space-y-8">
       <section className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
-        <div className="border-b border-gray-100 bg-gradient-to-r from-sky-50 to-white px-6 py-5">
+        <div className="border-b border-neutral-200 bg-brand-tint px-6 py-5 dark:border-zinc-800">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary text-white">
               <HardDrive className="h-5 w-5" />
             </div>
             <div>
@@ -145,7 +145,7 @@ export function GoogleDriveManager() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ej: Planilla de Guardias"
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all focus:border-sky-500 focus:bg-white dark:bg-zinc-900 focus:ring-4 focus:ring-sky-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all input-brand-focus focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
 
@@ -160,7 +160,7 @@ export function GoogleDriveManager() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://docs.google.com/..."
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all focus:border-sky-500 focus:bg-white dark:bg-zinc-900 focus:ring-4 focus:ring-sky-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all input-brand-focus focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
           </div>
@@ -179,7 +179,7 @@ export function GoogleDriveManager() {
                     onClick={() => setType(item.type)}
                     className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-sm transition-all ${
                       selected
-                        ? 'border-sky-500 bg-sky-50 text-sky-700 ring-2 ring-sky-500/20'
+                        ? 'border-brand-primary bg-brand-tint text-brand-primary ring-2 ring-brand-primary/20'
                         : 'border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:border-zinc-700 hover:bg-white dark:bg-zinc-900'
                     }`}
                   >
@@ -199,7 +199,7 @@ export function GoogleDriveManager() {
               id="gdrive-department"
               value={department}
               onChange={(e) => setDepartment(e.target.value as GoogleFileDepartment)}
-              className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all focus:border-sky-500 focus:bg-white dark:bg-zinc-900 focus:ring-4 focus:ring-sky-500/10"
+              className="w-full max-w-sm rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all input-brand-focus focus:ring-4 focus:ring-brand-primary/10"
             >
               {DEPARTMENTS.map((dept) => (
                 <option key={dept} value={dept}>
@@ -220,7 +220,7 @@ export function GoogleDriveManager() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Breve descripción del recurso..."
-              className="w-full resize-y rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all focus:border-sky-500 focus:bg-white dark:bg-zinc-900 focus:ring-4 focus:ring-sky-500/10"
+              className="w-full resize-y rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm outline-none transition-all input-brand-focus focus:ring-4 focus:ring-brand-primary/10"
             />
           </div>
 
@@ -228,7 +228,7 @@ export function GoogleDriveManager() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-sky-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-primary rounded-xl px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? 'Guardando...' : 'Guardar enlace'}
             </button>
@@ -246,10 +246,10 @@ export function GoogleDriveManager() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-600 border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 spinner-brand" />
           </div>
         ) : error ? (
-          <p className="px-6 py-16 text-center text-sm text-red-600">{error}</p>
+          <p className="px-6 py-16 text-center text-sm text-danger">{error}</p>
         ) : files.length === 0 ? (
           <p className="px-6 py-16 text-center text-sm text-gray-500 dark:text-gray-400">
             Aún no hay archivos compartidos registrados.
@@ -271,7 +271,7 @@ export function GoogleDriveManager() {
                   <tr key={file.id} className="hover:bg-gray-50 dark:bg-zinc-900/60/50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-tint text-brand-primary">
                           <TypeIcon type={file.type} className="h-4 w-4" />
                         </div>
                         <div>
@@ -282,7 +282,7 @@ export function GoogleDriveManager() {
                     </td>
                     <td className="px-6 py-4 capitalize text-gray-600 dark:text-gray-400">{file.type}</td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                      <span className="inline-flex rounded-full bg-brand-tint px-2.5 py-1 text-xs font-medium text-brand-primary">
                         {file.department}
                       </span>
                     </td>
@@ -302,7 +302,7 @@ export function GoogleDriveManager() {
                         onClick={() => file.id && handleDelete(file.id, file.title)}
                         disabled={deletingId === file.id}
                         aria-label={`Eliminar ${file.title}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-red-700 dark:text-red-300 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

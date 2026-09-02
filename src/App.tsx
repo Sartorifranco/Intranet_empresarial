@@ -13,7 +13,14 @@ function App() {
             <Toaster
               position="top-right"
               toastOptions={{
-                className: 'dark:!bg-zinc-900 dark:!text-gray-100 dark:!border-zinc-700',
+                className:
+                  '!rounded-lg !border !border-neutral-200 !text-neutral-900 dark:!border-zinc-700 dark:!bg-zinc-900 dark:!text-gray-100',
+                success: {
+                  iconTheme: { primary: '***REMOVED***1E3A5F', secondary: '***REMOVED***ffffff' },
+                },
+                error: {
+                  iconTheme: { primary: '***REMOVED***b42318', secondary: '***REMOVED***ffffff' },
+                },
               }}
             />
           </GlobalSettingsProvider>

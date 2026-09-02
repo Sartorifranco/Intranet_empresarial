@@ -193,7 +193,7 @@ export function GmailWidget() {
     <section className="card-minimal overflow-hidden dark:bg-zinc-900">
       <div className="p-4 lg:p-5">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-950/40 text-red-400">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-tint text-brand-primary">
             <Mail className="h-5 w-5" />
           </span>
           <p className="text-sm font-semibold text-neutral-900 dark:text-gray-100">Gmail</p>
@@ -208,7 +208,7 @@ export function GmailWidget() {
               type="button"
               onClick={handleConnectGoogle}
               disabled={connecting}
-              className="inline-flex w-full items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-red-900/30 hover:bg-neutral-50 hover:text-red-900 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-red-500/40 dark:hover:bg-zinc-700 dark:hover:text-red-400"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-brand-primary/30 hover:bg-neutral-50 hover:text-brand-primary disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:bg-zinc-700 dark:hover:text-brand-primary"
             >
               {connecting ? 'Conectando...' : 'Conectar Google'}
             </button>
@@ -245,7 +245,7 @@ export function GmailWidget() {
           href="https://mail.google.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-red-900/30 hover:bg-neutral-50 hover:text-red-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-red-500/40 dark:hover:bg-zinc-700 dark:hover:text-red-400"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition-colors hover:border-brand-primary/30 hover:bg-neutral-50 hover:text-brand-primary dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:bg-zinc-700 dark:hover:text-brand-primary"
         >
           Abrir Gmail
           <ExternalLink className="h-4 w-4" />

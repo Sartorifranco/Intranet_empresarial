@@ -85,7 +85,7 @@ export function JefeAnnualGrid({
             <button
               type="button"
               onClick={() => setYear(currentYear)}
-              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-primary hover:bg-red-50 dark:hover:bg-red-950/30"
+              className="rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-primary hover:bg-brand-tint"
             >
               Hoy
             </button>
@@ -95,7 +95,7 @@ export function JefeAnnualGrid({
 
       <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-neutral-500 dark:text-gray-400">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded border-2 border-brand-primary bg-red-50 dark:bg-red-950/40" />
+          <span className="h-3 w-3 rounded border-2 border-brand-primary bg-brand-tint" />
           Semana actual
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -141,9 +141,9 @@ export function JefeAnnualGrid({
                       onClick={() => onSelectWeek(weekKey)}
                       className={`rounded-xl border p-2.5 text-left transition-all hover:shadow-sm ${
                         isSelected
-                          ? 'border-brand-primary bg-red-50 ring-2 ring-brand-primary/30 dark:bg-red-950/30'
+                          ? 'border-brand-primary bg-brand-tint ring-2 ring-brand-primary/30 dark:bg-brand-tint'
                           : isCurrent
-                            ? 'border-brand-primary bg-red-50/50 dark:bg-red-950/20'
+                            ? 'border-brand-primary bg-brand-tint/50'
                             : isAssigned
                               ? 'border-brand-primary/30 bg-brand-primary/5 dark:bg-brand-primary/10'
                               : 'border-dashed border-neutral-300 bg-neutral-50 dark:border-zinc-600 dark:bg-zinc-950/50'

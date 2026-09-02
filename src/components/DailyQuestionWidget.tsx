@@ -150,7 +150,7 @@ export function DailyQuestionWidget() {
         {showToday && (
           <div>
             {hasVotedToday ? (
-              <div className="rounded-xl border border-dashed border-brand-primary/30 bg-red-50/50 px-4 py-6 text-center dark:bg-red-950/20">
+              <div className="rounded-xl border border-dashed border-brand-primary/30 bg-brand-tint/50 px-4 py-6 text-center dark:bg-brand-tint">
                 <p className="text-sm font-semibold text-neutral-900 dark:text-gray-100">
                   ¡Gracias por participar!
                 </p>
@@ -170,7 +170,7 @@ export function DailyQuestionWidget() {
                       type="button"
                       onClick={() => handleVote(index)}
                       disabled={voting}
-                      className="flex w-full items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-3 text-left text-sm font-medium break-words text-neutral-800 transition-all hover:border-red-200 hover:bg-red-50 hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-900 dark:text-gray-100 dark:hover:border-red-900/50 dark:hover:bg-red-950/40 sm:px-4"
+                      className="flex w-full items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-3 text-left text-sm font-medium break-words text-neutral-800 transition-all hover:border-brand-primary/25 hover:bg-brand-tint hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-900 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:bg-brand-primary-hover/40 sm:px-4"
                     >
                       <Vote className="h-4 w-4 shrink-0 text-brand-primary" />
                       {option}

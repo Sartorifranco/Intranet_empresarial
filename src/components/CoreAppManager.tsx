@@ -201,7 +201,7 @@ export function CoreAppManager() {
                     aria-pressed={selected}
                     className={`inline-flex h-11 w-11 items-center justify-center rounded-lg border transition-colors ${
                       selected
-                        ? 'border-brand-primary bg-red-50 dark:bg-red-950/40 text-brand-primary'
+                        ? 'border-brand-primary bg-brand-tint text-brand-primary'
                         : 'border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-neutral-600 dark:text-gray-400 hover:border-neutral-300 dark:border-zinc-700 hover:bg-neutral-50 dark:bg-zinc-950'
                     }`}
                   >
@@ -256,7 +256,7 @@ export function CoreAppManager() {
               <li
                 key={app.id}
                 className={`flex items-start justify-between gap-4 px-6 py-4 transition-colors hover:bg-neutral-50 dark:bg-zinc-950/80 ${
-                  editingId === app.id ? 'bg-red-50 dark:bg-red-950/40/40' : ''
+                  editingId === app.id ? 'bg-brand-tint' : ''
                 }`}
               >
                 <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -282,7 +282,7 @@ export function CoreAppManager() {
                     type="button"
                     onClick={() => app.id && handleDelete(app.id, app.title)}
                     disabled={deletingId === app.id}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary disabled:opacity-50"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-brand-tint hover:text-brand-primary disabled:opacity-50"
                     aria-label={`Eliminar ${app.title}`}
                   >
                     <Trash2 className="h-4 w-4" />

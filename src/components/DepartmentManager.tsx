@@ -78,7 +78,7 @@ export function DepartmentManager() {
     <section className="card-minimal overflow-hidden">
       <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-900 text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary text-white">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
@@ -103,7 +103,7 @@ export function DepartmentManager() {
           />
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-5 py-3 text-sm font-medium text-neutral-800 transition-colors hover:border-red-900/30 hover:text-red-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-red-500/40 dark:hover:text-red-300"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-5 py-3 text-sm font-medium text-neutral-800 transition-colors hover:border-brand-primary/30 hover:text-brand-primary dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-100 dark:hover:border-brand-primary/40 dark:hover:text-brand-primary"
           >
             <Plus className="h-4 w-4" />
             Agregar
@@ -128,7 +128,7 @@ export function DepartmentManager() {
                   type="button"
                   onClick={() => handleRemove(department)}
                   aria-label={`Eliminar ${department}`}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint hover:text-danger dark:text-brand-primary dark:hover:bg-brand-primary-hover/40 dark:hover:text-brand-primary"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

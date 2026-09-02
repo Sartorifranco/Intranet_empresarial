@@ -3,19 +3,19 @@
  * La fuente de verdad visual está en brand.css — mantener ambos sincronizados.
  */
 export const brandTheme = {
-  primary: '***REMOVED***8b0000',
-  primaryHover: '***REMOVED***6b0000',
-  primaryLight: '***REMOVED***fef2f2',
-  primaryMuted: '***REMOVED***fee2e2',
-  primaryText: '***REMOVED***8b0000',
-  text: '***REMOVED***0a0a0a',
-  textMuted: '***REMOVED***404040',
-  textSubtle: '***REMOVED***737373',
+  primary: '***REMOVED***1E3A5F',
+  primaryHover: '***REMOVED***152d4a',
+  primaryLight: '***REMOVED***e8eef5',
+  primaryMuted: '***REMOVED***c5d4e4',
+  primaryText: '***REMOVED***1E3A5F',
+  text: '***REMOVED***202124',
+  textMuted: '***REMOVED***5f6368',
+  textSubtle: '***REMOVED***80868b',
   navbarBg: '***REMOVED***ffffff',
-  navbarBorder: '***REMOVED***e5e5e5',
+  navbarBorder: '***REMOVED***dadce0',
   surface: '***REMOVED***ffffff',
   surfaceElevated: '***REMOVED***ffffff',
-  surfaceMuted: '***REMOVED***fafafa',
+  surfaceMuted: '***REMOVED***f8f9fa',
 } as const
 
 export type BrandTheme = typeof brandTheme

@@ -119,7 +119,7 @@ export function BirthdayWidget({
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-xl ${
               hub || minimal
-                ? 'bg-red-50 dark:bg-red-950/40 text-brand-primary'
+                ? 'bg-brand-tint text-brand-primary'
                 : 'bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-sm'
             }`}
           >
@@ -159,7 +159,7 @@ export function BirthdayWidget({
                   className={`flex min-w-0 items-center gap-3 py-2 ${
                     compact
                       ? isToday
-                        ? 'rounded-lg border border-red-100 bg-red-50 dark:bg-red-950/40/50 pl-3'
+                        ? 'rounded-lg border border-brand-primary/15 bg-brand-tint/50 pl-3'
                         : 'border-b border-neutral-100 dark:border-zinc-800 pb-3 last:border-0'
                       : `rounded-xl border px-3 py-3 transition-colors ${
                           isToday

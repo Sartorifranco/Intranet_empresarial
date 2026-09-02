@@ -1,14 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context'
-import { isSuperAdminEmail } from '../services/userService'
+import { isSuperAdmin } from '../services/userService'
 
-/**
- * Solo sistemas.ti@bacarsa.com.ar y admin@bacarsa.com.ar pueden entrar al panel admin.
- */
+/** Solo super_admin (rol en Firestore) puede entrar al panel admin. */
 export function AdminRoute() {
-  const { user, loading } = useAuth()
+  const { user, userProfile, loading, profileLoading } = useAuth()
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50 dark:bg-zinc-950">
         <div className="flex flex-col items-center gap-3">
@@ -19,7 +17,7 @@ export function AdminRoute() {
     )
   }
 
-  if (!user || !isSuperAdminEmail(user.email)) {
+  if (!user || !isSuperAdmin(userProfile)) {
     return <Navigate to="/intranet" replace />
   }
 

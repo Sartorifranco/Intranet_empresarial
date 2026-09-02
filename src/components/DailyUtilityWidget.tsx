@@ -1,31 +1,13 @@
-import {
-  Cloud,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSun,
-  DollarSign,
-  RefreshCw,
-  Sun,
-} from 'lucide-react'
+import { DollarSign, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import {
   fetchCordobaWeather,
   fetchFxQuotes,
   formatArs,
   type FxQuote,
-  type WeatherIcon,
   type WeatherSnapshot,
 } from '../services/dailyUtilityService'
-
-const WEATHER_ICONS = {
-  sun: Sun,
-  'cloud-sun': CloudSun,
-  cloud: Cloud,
-  rain: CloudRain,
-  fog: CloudFog,
-  storm: CloudLightning,
-} as const
+import { getWeatherInlineIconTone, WeatherIconGlyph } from './weather/weatherIcons'
 
 function WidgetSkeleton() {
   return (
@@ -75,12 +57,13 @@ function RateRow({ quote }: { quote: FxQuote }) {
 }
 
 function WeatherDisplay({ weather }: { weather: WeatherSnapshot }) {
-  const Icon = WEATHER_ICONS[weather.icon as WeatherIcon]
-
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400">
-        <Icon className="h-5 w-5" />
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-50 dark:bg-sky-950/40">
+        <WeatherIconGlyph
+          icon={weather.icon}
+          className={`h-5 w-5 ${getWeatherInlineIconTone(weather.icon)}`}
+        />
       </span>
       <div className="min-w-0">
         <p className="text-2xl font-bold tabular-nums text-neutral-900 dark:text-white">

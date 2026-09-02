@@ -11,9 +11,14 @@ import {
   updateDoc,
   type DocumentData,
 } from 'firebase/firestore'
-import { removeUserFromAllDriveFiles } from './googleDriveService'
 import { auth, db } from './firebase'
 import { logAction } from './auditLogService'
+import { applyPendingUserSetupAfterRegister } from './usersApi'
+import {
+  resolveHomeWidgetPreferences,
+  type HomeWidgetId,
+  type HomeWidgetPreferences,
+} from '../constants/homeWidgets'
 
 const USERS_COLLECTION = 'users'
 
@@ -48,13 +53,17 @@ export interface UserProfile {
   displayName: string
   department: UserDepartment
   role: UserRole
-  /** Solo aplica si role === 'admin'. IDs de carpetas de primer nivel / áreas. */
+  /** Solo aplica si role === 'admin'. IDs de carpetas de primer nivel / áreas que gobierna. */
   managedAreaIds?: string[]
+  /** Áreas a las que pertenece (fan-out Drive, directorio interno). Cualquier rol. */
+  memberAreaIds?: string[]
   /**
    * @deprecated Reemplazado por `role`. Se mantiene por compatibilidad.
    */
   permissions: UserPermissions
   favoriteApps: string[]
+  /** Widgets visibles en la tarjeta de bienvenida de la home. */
+  widgetPreferences: HomeWidgetPreferences
   birthDate?: string
 }
 
@@ -161,11 +170,20 @@ function mapDocToUserProfile(uid: string, data: DocumentData): UserProfile {
     favoriteApps: Array.isArray(data.favoriteApps)
       ? (data.favoriteApps as string[])
       : [],
+    widgetPreferences: resolveHomeWidgetPreferences(
+      data.widgetPreferences as Partial<HomeWidgetPreferences> | undefined,
+    ),
     birthDate: typeof data.birthDate === 'string' ? data.birthDate : undefined,
   }
 
   if (role === 'admin' && Array.isArray(data.managedAreaIds)) {
     profile.managedAreaIds = (data.managedAreaIds as unknown[]).filter(
+      (id): id is string => typeof id === 'string' && id.length > 0,
+    )
+  }
+
+  if (Array.isArray(data.memberAreaIds)) {
+    profile.memberAreaIds = (data.memberAreaIds as unknown[]).filter(
       (id): id is string => typeof id === 'string' && id.length > 0,
     )
   }
@@ -195,6 +213,12 @@ export async function registerUser(
     favoriteApps: [],
   })
 
+  try {
+    await applyPendingUserSetupAfterRegister()
+  } catch (err) {
+    console.error('No se pudo aplicar la configuración pendiente:', err)
+  }
+
   return uid
 }
 
@@ -202,12 +226,12 @@ export async function registerUser(
  * Crea el perfil de Firestore solo si no existe.
  * Nunca actualiza `role` (ni otros campos) de un documento existente.
  */
-export async function ensureGoogleUserProfile(user: User): Promise<void> {
+export async function ensureGoogleUserProfile(user: User): Promise<boolean> {
   const userRef = doc(db, USERS_COLLECTION, user.uid)
   const snapshot = await getDoc(userRef)
 
   if (snapshot.exists()) {
-    return
+    return false
   }
 
   await setDoc(userRef, {
@@ -221,6 +245,8 @@ export async function ensureGoogleUserProfile(user: User): Promise<void> {
     permissions: getPermissionsForEmail(user.email),
     favoriteApps: [],
   })
+
+  return true
 }
 
 /**
@@ -327,15 +353,31 @@ export async function toggleFavoriteApp(userId: string, appId: string): Promise<
   return next
 }
 
+export async function updateHomeWidgetPreferences(
+  userId: string,
+  patch: Partial<HomeWidgetPreferences>,
+): Promise<HomeWidgetPreferences> {
+  const profile = await getUserProfile(userId)
+  const current = profile?.widgetPreferences ?? resolveHomeWidgetPreferences(undefined)
+  const next: HomeWidgetPreferences = { ...current, ...patch }
+
+  await updateDoc(doc(db, USERS_COLLECTION, userId), {
+    widgetPreferences: next,
+  })
+
+  return next
+}
+
+export type { HomeWidgetId, HomeWidgetPreferences }
+
 /**
- * Elimina el perfil de Firestore y limpia referencias en archivos de Drive.
+ * Elimina el perfil de Firestore.
  *
  * NOTA: La cuenta en Firebase Authentication NO se elimina desde el SDK del cliente.
  * En producción, usá una Cloud Function con Admin SDK o eliminá el usuario manualmente
  * en Firebase Console → Authentication.
  */
 export async function deleteUser(uid: string): Promise<void> {
-  await removeUserFromAllDriveFiles(uid)
   await deleteDoc(doc(db, USERS_COLLECTION, uid))
 }
 
@@ -431,6 +473,49 @@ export async function updateManagedAreaIds(
 
   await logAction({
     action: 'managed_areas_change',
+    targetType: 'user',
+    targetId: uid,
+    targetName,
+    metadata: { antes: beforeAreas, despues: cleaned },
+  })
+}
+
+/**
+ * Actualiza memberAreaIds (pertenencia a áreas). Válido para cualquier rol excepto super_admin.
+ */
+export async function updateMemberAreaIds(
+  uid: string,
+  areaIds: string[],
+): Promise<void> {
+  const snapshot = await getDoc(doc(db, USERS_COLLECTION, uid))
+  if (!snapshot.exists()) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  const currentRole = snapshot.data().role
+  if (currentRole === 'super_admin') {
+    throw new Error('No se editan áreas de pertenencia de super_admin desde aquí')
+  }
+
+  const cleaned = areaIds
+    .filter((id): id is string => typeof id === 'string')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0)
+
+  const beforeAreas = Array.isArray(snapshot.data().memberAreaIds)
+    ? (snapshot.data().memberAreaIds as string[])
+    : []
+  const targetName =
+    (typeof snapshot.data().displayName === 'string' && snapshot.data().displayName) ||
+    (typeof snapshot.data().email === 'string' && snapshot.data().email) ||
+    uid
+
+  await updateDoc(doc(db, USERS_COLLECTION, uid), {
+    memberAreaIds: cleaned,
+  })
+
+  await logAction({
+    action: 'member_areas_change',
     targetType: 'user',
     targetId: uid,
     targetName,
