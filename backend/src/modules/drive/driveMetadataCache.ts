@@ -1,6 +1,6 @@
 import type { drive_v3 } from 'googleapis'
 import { adminDb } from '../../lib/firebase/admin.js'
-import { subjectCacheKey, TtlCache } from '../../lib/cache/ttlCache.js'
+import { subjectCacheKey, TtlCache } from '../../cache/ttlCache.js'
 
 const MAPPINGS_TTL_MS = 15 * 60 * 1000
 const AREA_NAMES_TTL_MS = 15 * 60 * 1000
