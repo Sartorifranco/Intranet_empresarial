@@ -4,6 +4,7 @@ import { sanitizeDriveId } from '../../lib/google/driveIds.js'
 import { logError } from '../../lib/log.js'
 import { writeAuditLogBestEffort } from '../audit/writeAuditLog.js'
 import { getFileInSharedDrive, googleStatus, googleUserMessage } from './assertInSharedDrive.js'
+import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
 import { resolveDriveSubject } from './driveSubject.js'
 import { getMinReasonLength } from './policy.js'
 
@@ -104,5 +105,6 @@ export async function trashDriveFile(req: Request, res: Response): Promise<void>
     metadata: { trashed: true },
   })
 
+  invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
   res.json({ id: fileId, trashed: true })
 }

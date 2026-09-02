@@ -1,12 +1,12 @@
 import { KeyRound, LayoutDashboard, Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { BoardAccessModal } from '../components/BoardAccessModal'
 import { useAuth } from '../context'
+import { useBoardsQuery } from '../hooks/queries/useCatalogQueries'
 import {
   boardEntryUrl,
   ensureBoardSession,
-  listBoards,
   recordBoardOpen,
   startBoardSessionRenewal,
   stopBoardSessionRenewal,
@@ -15,31 +15,21 @@ import {
 import { isSuperAdmin } from '../services/userService'
 
 export function BoardList() {
-  const { userProfile } = useAuth()
+  const { user, userProfile } = useAuth()
   const superAdmin = isSuperAdmin(userProfile)
-  const [boards, setBoards] = useState<BoardDto[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const {
+    data,
+    isLoading: loading,
+    isError,
+    error: queryError,
+  } = useBoardsQuery(user?.uid)
+  const boards = data?.boards ?? []
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'No se pudieron cargar los tableros'
+    : null
   const [accessTarget, setAccessTarget] = useState<BoardDto | null>(null)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      await ensureBoardSession()
-      const result = await listBoards()
-      setBoards(result.boards)
-    } catch (err) {
-      setBoards([])
-      setError(err instanceof Error ? err.message : 'No se pudieron cargar los tableros')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void load()
-  }, [load])
 
   return (
     <div className="min-w-0 space-y-6">

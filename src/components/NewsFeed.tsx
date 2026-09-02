@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
-import { getNews, type NewsCategory, type NewsPost } from '../services/newsService'
+import { useNewsQuery } from '../hooks/queries/useCatalogQueries'
+import { type NewsCategory } from '../services/newsService'
 
 const NEWS_CATEGORY_STYLES: Record<NewsCategory, { label: string; badge: string }> = {
   General: {
@@ -60,24 +60,9 @@ function NewsSkeleton({ editorial = false }: { editorial?: boolean }) {
 }
 
 export function NewsFeed({ variant = 'grid' }: { variant?: 'grid' | 'editorial' }) {
-  const [news, setNews] = useState<NewsPost[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: news = [], isLoading: loading, isError } = useNewsQuery()
+  const error = isError ? 'No se pudieron cargar las noticias.' : null
   const editorial = variant === 'editorial'
-
-  useEffect(() => {
-    getNews()
-      .then((data) => {
-        setNews(data)
-        setError(null)
-      })
-      .catch((err) => {
-        console.error('Error al cargar las noticias:', err)
-        setNews([])
-        setError('No se pudieron cargar las noticias.')
-      })
-      .finally(() => setLoading(false))
-  }, [])
 
   return (
     <section id="comunicados" className="min-w-0 scroll-mt-24">

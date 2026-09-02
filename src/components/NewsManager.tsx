@@ -1,14 +1,14 @@
 import { Timestamp } from 'firebase/firestore'
 import { Newspaper, Pencil, Trash2, X } from 'lucide-react'
-import { type FormEvent, useCallback, useEffect, useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context'
+import { useInvalidateCatalog, useNewsQuery } from '../hooks/queries/useCatalogQueries'
 import { formatExpiryLabel, isContentExpired } from '../services/contentExpiry'
 import {
   createNews,
   deleteNews,
   datetimeLocalToTimestamp,
-  getNews,
   timestampToDatetimeLocal,
   updateNews,
   type NewsCategory,
@@ -52,9 +52,9 @@ function resetForm(
 
 export function NewsManager() {
   const { user } = useAuth()
-  const [news, setNews] = useState<NewsPost[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: news = [], isLoading: loading, isError } = useNewsQuery(true)
+  const { invalidateNews } = useInvalidateCatalog()
+  const error = isError ? 'No se pudieron cargar las noticias. Intentá nuevamente.' : null
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -63,24 +63,6 @@ export function NewsManager() {
   const [imageUrl, setImageUrl] = useState('')
   const [category, setCategory] = useState<NewsCategory>('General')
   const [expiresAt, setExpiresAt] = useState('')
-
-  const loadNews = useCallback(async () => {
-    try {
-      const data = await getNews({ includeExpired: true })
-      setNews(data)
-      setError(null)
-    } catch (err) {
-      console.error('Error al cargar las noticias:', err)
-      setNews([])
-      setError('No se pudieron cargar las noticias. Intentá nuevamente.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadNews()
-  }, [loadNews])
 
   const handleEdit = (post: NewsPost) => {
     if (!post.id) return
@@ -127,7 +109,7 @@ export function NewsManager() {
       }
 
       handleCancelEdit()
-      await loadNews()
+      await invalidateNews(true)
     } catch {
       toast.error(editingId ? 'Error al actualizar la noticia' : 'Error al publicar la noticia')
     } finally {
@@ -147,7 +129,7 @@ export function NewsManager() {
       await deleteNews(id)
       toast.success('Noticia eliminada')
       if (editingId === id) handleCancelEdit()
-      await loadNews()
+      await invalidateNews(true)
     } catch {
       toast.error('Error al eliminar la noticia')
     } finally {

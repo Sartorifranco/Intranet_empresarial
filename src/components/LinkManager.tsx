@@ -1,10 +1,10 @@
 import { ExternalLink, Link2, Pencil, Trash2 } from 'lucide-react'
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
+import { useInvalidateCatalog, useLinksQuery } from '../hooks/queries/useCatalogQueries'
 import {
   createLink,
   deleteLink,
-  getLinks,
   updateLink,
   type LinkCategory,
   type UsefulLink,
@@ -13,9 +13,9 @@ import {
 const CATEGORIES: LinkCategory[] = ['Herramientas IT', 'Operaciones', 'RRHH']
 
 export function LinkManager() {
-  const [links, setLinks] = useState<UsefulLink[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: links = [], isLoading: loading, isError } = useLinksQuery()
+  const { invalidateLinks } = useInvalidateCatalog()
+  const error = isError ? 'No se pudieron cargar los enlaces. Intentá nuevamente.' : null
   const [submitting, setSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -23,24 +23,6 @@ export function LinkManager() {
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<LinkCategory>('Herramientas IT')
-
-  const loadLinks = useCallback(async () => {
-    try {
-      const data = await getLinks()
-      setLinks(data)
-      setError(null)
-    } catch (err) {
-      console.error('Error al cargar los enlaces:', err)
-      setLinks([])
-      setError('No se pudieron cargar los enlaces. Intentá nuevamente.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadLinks()
-  }, [loadLinks])
 
   const linksByCategory = useMemo(
     () =>
@@ -89,7 +71,7 @@ export function LinkManager() {
       }
 
       resetForm()
-      await loadLinks()
+      await invalidateLinks()
     } catch (err) {
       console.error('Error al guardar el enlace:', err)
       toast.error(editingId ? 'Error al actualizar el enlace' : 'Error al guardar el enlace')
@@ -110,7 +92,7 @@ export function LinkManager() {
       await deleteLink(id)
       toast.success('Enlace eliminado')
       if (editingId === id) resetForm()
-      await loadLinks()
+      await invalidateLinks()
     } catch (err) {
       console.error('Error al eliminar el enlace:', err)
       toast.error('Error al eliminar el enlace')
