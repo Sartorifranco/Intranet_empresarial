@@ -196,7 +196,7 @@ function PermissionsModal({ target, onClose, onUpdated }: PermissionsModalProps)
                     <label
                       className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
                         checked
-                          ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40/40'
+                          ? 'border-brand-primary/25 dark:border-brand-primary/40 bg-brand-tint'
                           : 'border-neutral-100 dark:border-zinc-800 hover:bg-neutral-50 dark:bg-zinc-950'
                       }`}
                     >
@@ -205,7 +205,7 @@ function PermissionsModal({ target, onClose, onUpdated }: PermissionsModalProps)
                         checked={checked}
                         disabled={togglingUid === user.uid}
                         onChange={(e) => handleToggle(user.uid, e.target.checked)}
-                        className="h-4 w-4 rounded border-neutral-300 dark:border-zinc-700 text-brand-primary focus:ring-red-900/20"
+                        className="h-4 w-4 rounded border-neutral-300 dark:border-zinc-700 text-brand-primary focus:ring-brand-primary/20"
                       />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-neutral-900 dark:text-gray-100">
@@ -843,7 +843,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                         onClick={() => enterFolder(folder)}
                         className="flex items-center gap-3 text-left font-medium text-neutral-900 dark:text-gray-100 hover:text-brand-primary"
                       >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/40 text-brand-primary">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-tint text-brand-primary">
                           <FolderOpen className="h-4 w-4" />
                         </span>
                         {folder.name}
@@ -881,7 +881,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                             openPermissions({ kind: 'folder', item: folder })
                           }}
                           aria-label={`Permisos de ${folder.name}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-brand-tint hover:text-brand-primary"
                         >
                           <KeyRound className="h-4 w-4" />
                         </button>
@@ -893,7 +893,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                               void handleDeleteFolder(folder)
                             }}
                             aria-label={`Eliminar ${folder.name}`}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover-danger dark:text-gray-400"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -947,7 +947,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                           type="button"
                           onClick={() => openPermissions({ kind: 'resource', item })}
                           aria-label={`Permisos de ${item.name}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 dark:text-gray-400 transition-colors hover:bg-brand-tint hover:text-brand-primary"
                         >
                           <KeyRound className="h-4 w-4" />
                         </button>
@@ -956,7 +956,7 @@ export function ResourceExplorer({ mode = 'super' }: { mode?: ResourceExplorerMo
                             type="button"
                             onClick={() => void handleDeleteResource(item)}
                             aria-label={`Eliminar ${item.name}`}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition-colors hover-danger dark:text-gray-400"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

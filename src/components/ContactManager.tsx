@@ -146,7 +146,7 @@ export function ContactManager() {
           <div className="border-b border-neutral-200 bg-neutral-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-900 text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary text-white">
                   <Contact className="h-5 w-5" />
                 </div>
                 <div>
@@ -327,7 +327,7 @@ export function ContactManager() {
               <div className="spinner-brand h-8 w-8 animate-spin rounded-full border-4" />
             </div>
           ) : error ? (
-            <p className="px-6 py-16 text-center text-sm text-red-600 dark:text-red-400">
+            <p className="px-6 py-16 text-center text-sm text-danger">
               {error}
             </p>
           ) : contacts.length === 0 ? (
@@ -352,7 +352,7 @@ export function ContactManager() {
                       key={contact.id}
                       className={`transition-colors ${
                         editingId === contact.id
-                          ? 'bg-red-50/60 dark:bg-red-950/20'
+                          ? 'bg-brand-tint/60'
                           : 'hover:bg-neutral-50 dark:hover:bg-zinc-800/50'
                       }`}
                     >
@@ -363,7 +363,7 @@ export function ContactManager() {
                         {contact.position}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-900 dark:bg-red-950/40 dark:text-red-300">
+                        <span className="inline-flex rounded-full bg-brand-tint px-2.5 py-1 text-xs font-medium text-brand-primary dark:bg-brand-tint">
                           {contact.department}
                         </span>
                       </td>
@@ -379,7 +379,7 @@ export function ContactManager() {
                             type="button"
                             onClick={() => handleEdit(contact)}
                             aria-label={`Editar ${contact.name}`}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-red-50 hover:text-red-900 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-brand-tint hover:text-brand-primary dark:text-gray-400 dark:hover:bg-brand-primary-hover/40 dark:hover:text-brand-primary"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -388,7 +388,7 @@ export function ContactManager() {
                             onClick={() => contact.id && handleDelete(contact.id, contact.name)}
                             disabled={deletingId === contact.id}
                             aria-label={`Eliminar ${contact.name}`}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint hover:text-danger disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-primary dark:hover:bg-brand-primary-hover/40 dark:hover:text-brand-primary"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

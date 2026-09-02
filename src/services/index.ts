@@ -19,6 +19,7 @@ export {
   resolveRoleFromUserData,
   toggleFavoriteApp,
   updateManagedAreaIds,
+  updateMemberAreaIds,
   updateUserBasicInfo,
   updateUserPermissions,
   updateUserRole,
@@ -38,6 +39,38 @@ export {
 } from './bannerService'
 export { api } from './api'
 export { auth, db } from './firebase'
+export { fetchAuditLogs, type AuditLogDto, type FetchAuditLogsInput } from './auditApi'
+export {
+  approveDriveFile,
+  createDriveFile,
+  grantDrivePermission,
+  listDriveFiles,
+  listDrivePermissions,
+  revokeDrivePermission,
+  trashDriveFile,
+  updateDriveClassification,
+  uploadDriveFile,
+  type CreateDriveFileInput,
+  type DriveApprovalStatus,
+  type DriveClassification,
+  type DriveCreator,
+  type DriveFileDto,
+  type DrivePermissionDto,
+  type DrivePermissionRole,
+  type GrantDrivePermissionInput,
+  type ListDrivePermissionsResult,
+  type UploadDriveFileInput,
+} from './driveApi'
+export {
+  boardEntryUrl,
+  ensureBoardSession,
+  listBoards,
+  recordBoardOpen,
+  startBoardSessionRenewal,
+  stopBoardSessionRenewal,
+  type BoardDto,
+  type ListBoardsResult,
+} from './boardsApi'
 export {
   logAction,
   getAuditLogs,
@@ -49,19 +82,6 @@ export {
   type GetAuditLogsOptions,
   type LogActionInput,
 } from './auditLogService'
-export {
-  createSharedFile,
-  deleteSharedFile,
-  filterSharedFilesForUser,
-  getSharedFiles,
-  isSharedFilePublic,
-  canUserAccessFile,
-  removeUserFromAllDriveFiles,
-  setUserFileAccess,
-  type GoogleFileDepartment,
-  type GoogleFileType,
-  type GoogleSharedFile,
-} from './googleDriveService'
 export {
   createContact,
   deleteContact,
@@ -88,26 +108,11 @@ export {
   type CreateCoreAppInput,
 } from './coreAppService'
 export {
-  createFolder,
-  createResourceItem,
-  deleteFolder,
-  deleteResourceItem,
-  getFoldersAndItems,
-  updateFolderName,
-  updateFolderPermissions,
-  updateResourceItem,
-  updateResourcePermissions,
-  filterLevelContentsForUser,
-  getFolderById,
-  canUserAccessFolder,
-  canUserAccessResource,
-  isFolderPublic,
-  isResourcePublic,
-  resolveRootAreaIdForFolder,
-  type Folder,
-  type FolderLevelContents,
-  type ResourceItem,
-} from './folderService'
+  listRootAreas,
+  listAssignableRootAreas,
+  isSharedAreasFolder,
+  type GoverningArea,
+} from './areaService'
 export {
   createLink,
   deleteLink,

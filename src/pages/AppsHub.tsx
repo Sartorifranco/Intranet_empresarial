@@ -31,14 +31,14 @@ function AppCard({
   toggling: boolean
 }) {
   return (
-    <article className="relative overflow-hidden rounded-xl border border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-brand-primary/40 hover:shadow-md">
+    <article className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors hover:border-brand-primary/40 dark:border-zinc-800 dark:bg-zinc-900">
       <button
         type="button"
         onClick={onToggleFavorite}
         disabled={toggling}
         aria-label={isFavorite ? `Quitar ${app.title} de favoritos` : `Anclar ${app.title}`}
         aria-pressed={isFavorite}
-        className="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-900/90 text-neutral-400 shadow-sm transition-colors hover:bg-red-50 dark:bg-red-950/40 hover:text-brand-primary disabled:opacity-50"
+        className="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-400 transition-colors hover:border-brand-primary/30 hover:bg-brand-tint hover:text-brand-primary disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-brand-primary-hover/40"
       >
         <Pin
           className={`h-4 w-4 ${isFavorite ? 'fill-brand-primary text-brand-primary' : ''}`}
@@ -51,7 +51,7 @@ function AppCard({
         rel="noopener noreferrer"
         className="group flex h-full flex-col p-6 pr-12"
       >
-        <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-zinc-800 text-brand-primary transition-colors group-hover:bg-red-50 dark:bg-red-950/40">
+        <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 dark:bg-zinc-800 text-brand-primary transition-colors group-hover:bg-brand-tint">
           {app.imageUrl ? (
             <img src={app.imageUrl} alt="" className="h-8 w-8 object-contain" />
           ) : (
@@ -155,7 +155,7 @@ export function AppsHub() {
       {loading ? (
         <AppsGridSkeleton />
       ) : error ? (
-        <p className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+        <p className="rounded-lg alert-error px-4 py-3 text-sm text-danger">
           No se pudieron cargar las aplicaciones. Intentá nuevamente más tarde.
         </p>
       ) : apps.length === 0 ? (
@@ -176,7 +176,7 @@ export function AppsHub() {
           <button
             type="button"
             onClick={() => setSearch('')}
-            className="mt-3 text-sm font-semibold text-brand-primary hover:text-red-950"
+            className="mt-3 text-sm font-semibold text-brand-primary hover:opacity-90"
           >
             Limpiar búsqueda
           </button>

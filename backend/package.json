@@ -1,0 +1,30 @@
+{
+  "name": "intranet-backend",
+  "private": true,
+  "version": "0.0.0",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions --project bacar-web"
+  },
+  "dependencies": {
+    "@types/busboy": "^1.5.4",
+    "busboy": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^6.4.0",
+    "googleapis": "^159.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/node": "^22.18.0",
+    "typescript": "~5.9.2"
+  }
+}

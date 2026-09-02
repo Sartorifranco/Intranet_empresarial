@@ -17,7 +17,7 @@ function ContactsSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="animate-pulse rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm"
+          className="animate-pulse rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
         >
           <div className="mb-4 flex items-center gap-4">
             <div className="h-14 w-14 rounded-full bg-gray-200 dark:bg-zinc-800" />
@@ -80,9 +80,9 @@ export function Directory() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <section className="rounded-xl border border-gray-200 bg-white p-8 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-900 text-white">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary text-white">
             <Users className="h-5 w-5" />
           </div>
           <div>
@@ -100,7 +100,7 @@ export function Directory() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, puesto o departamento..."
-            className="w-full rounded-xl border border-zinc-200 bg-zinc-100 py-4 pr-4 pl-12 text-base text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-red-900 focus:ring-4 focus:ring-red-900/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-red-800 dark:focus:ring-red-900/20"
+            className="w-full rounded-xl border border-zinc-200 bg-zinc-100 py-4 pr-4 pl-12 text-base text-zinc-900 outline-none transition-all placeholder:text-zinc-400 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder:text-zinc-500 dark:focus:border-brand-primary dark:focus:ring-brand-primary/20"
           />
         </div>
       </section>
@@ -116,8 +116,8 @@ export function Directory() {
       {loading ? (
         <ContactsSkeleton />
       ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-12 text-center dark:border-red-900/50 dark:bg-red-950/40">
-          <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
+        <div className="rounded-2xl alert-error px-6 py-12 text-center ">
+          <p className="text-sm font-medium text-danger">{error}</p>
         </div>
       ) : contacts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center dark:border-zinc-700 dark:bg-zinc-900">
@@ -133,7 +133,7 @@ export function Directory() {
           <button
             type="button"
             onClick={() => setSearch('')}
-            className="mt-3 text-sm font-medium text-red-900 hover:underline dark:text-red-400"
+            className="mt-3 text-sm font-medium text-brand-primary hover:underline"
           >
             Limpiar búsqueda
           </button>
@@ -143,16 +143,16 @@ export function Directory() {
           {filteredContacts.map((contact) => (
             <article
               key={contact.id}
-              className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              className="flex flex-col rounded-xl border border-gray-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
             >
               <div className="mb-5 flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-900 text-lg font-bold text-white">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-primary text-lg font-bold text-white">
                   {getInitials(contact.name)}
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-bold text-zinc-900 dark:text-white">{contact.name}</h2>
                   <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{contact.position}</p>
-                  <span className="mt-2 inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-900 dark:bg-red-900/20 dark:text-red-400">
+                  <span className="mt-2 inline-flex rounded-full bg-brand-tint px-2.5 py-0.5 text-xs font-medium text-brand-primary">
                     {contact.department}
                   </span>
                 </div>
@@ -184,7 +184,7 @@ export function Directory() {
                 </button>
                 <a
                   href={`mailto:${contact.email}`}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-900 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-800"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-primary px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-primary-hover"
                 >
                   <Mail className="h-4 w-4" />
                   Enviar mail

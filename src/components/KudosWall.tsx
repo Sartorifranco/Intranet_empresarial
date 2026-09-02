@@ -12,20 +12,20 @@ import {
 
 const BADGE_STYLES: Record<
   KudoBadge,
-  { gradient: string; border: string; badge: string }
+  { accent: string; border: string; badge: string }
 > = {
   Compañerismo: {
-    gradient: 'from-blue-500 via-cyan-500 to-teal-400',
+    accent: 'bg-cyan-500',
     border: 'border-cyan-200',
     badge: 'bg-cyan-100 text-cyan-800',
   },
   Liderazgo: {
-    gradient: 'from-amber-500 via-orange-500 to-yellow-400',
+    accent: 'bg-amber-500',
     border: 'border-amber-200 dark:border-amber-900/50',
     badge: 'bg-amber-100 text-amber-800 dark:text-amber-300',
   },
   'Gran Esfuerzo': {
-    gradient: 'from-rose-500 via-pink-500 to-fuchsia-400',
+    accent: 'bg-rose-500',
     border: 'border-rose-200',
     badge: 'bg-rose-100 text-rose-800',
   },
@@ -122,7 +122,7 @@ export function KudosWall({ variant = 'default' }: { variant?: 'default' | 'side
               ))}
             </div>
           ) : error ? (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-danger">{error}</p>
           ) : recentKudos.length === 0 ? (
             <p className="text-center text-sm text-neutral-500 dark:text-gray-400">
               Aún no hay reconocimientos. ¡Sé el primero!
@@ -166,10 +166,10 @@ export function KudosWall({ variant = 'default' }: { variant?: 'default' | 'side
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-rose-100 bg-gradient-to-br from-rose-50/80 via-orange-50/50 to-amber-50/80 p-6 shadow-sm sm:p-8">
+    <section className="overflow-hidden rounded-xl border border-rose-100 bg-rose-50/40 p-6 dark:border-rose-900/30 dark:bg-rose-950/20 sm:p-8">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-md">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-600 text-white dark:border-rose-800">
             <Sparkles className="h-5 w-5" />
           </div>
           <div>
@@ -189,7 +189,7 @@ export function KudosWall({ variant = 'default' }: { variant?: 'default' | 'side
       {loading ? (
         <KudosSkeleton />
       ) : error ? (
-        <p className="rounded-xl bg-red-50 dark:bg-red-950/40 px-4 py-8 text-center text-sm text-red-700 dark:text-red-300">{error}</p>
+        <p className="rounded-xl bg-brand-tint px-4 py-8 text-center text-sm text-danger">{error}</p>
       ) : kudos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-rose-200 bg-white dark:bg-zinc-900/60 px-6 py-12 text-center">
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -207,9 +207,9 @@ export function KudosWall({ variant = 'default' }: { variant?: 'default' | 'side
             return (
               <article
                 key={kudo.id}
-                className={`relative overflow-hidden rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm transition-shadow hover:shadow-lg ${styles.border}`}
+                className={`relative overflow-hidden rounded-xl border bg-white dark:bg-zinc-900 ${styles.border}`}
               >
-                <div className={`h-1.5 bg-gradient-to-r ${styles.gradient}`} />
+                <div className={`h-1 ${styles.accent}`} />
 
                 <div className="p-5">
                   <div className="mb-4 flex items-center justify-between gap-2">

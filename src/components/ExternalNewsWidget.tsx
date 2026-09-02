@@ -9,8 +9,8 @@ import {
 function LiveIndicator() {
   return (
     <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-600 opacity-50" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-700 animate-pulse dark:bg-red-500" />
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-primary opacity-50" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-primary animate-pulse" />
     </span>
   )
 }
@@ -39,27 +39,27 @@ function EditorialCard({ article }: { article: ExternalArticle }) {
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative block h-56 w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200/80 shadow-md transition-shadow hover:shadow-xl dark:border-zinc-700/80"
+      className="group relative block h-56 w-[300px] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-200 transition-colors hover:border-neutral-300 dark:border-zinc-700 dark:hover:border-zinc-600"
     >
       {article.imageUrl ? (
         <img
           src={article.imageUrl}
           alt=""
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover"
           onError={(e) => {
             e.currentTarget.style.display = 'none'
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black">
+        <div className="absolute inset-0 bg-neutral-800 dark:bg-zinc-900">
           <div className="flex h-full items-center justify-center opacity-20">
             <Newspaper className="h-16 w-16 text-white" strokeWidth={1.25} />
           </div>
         </div>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10" />
+      <div className="absolute inset-0 bg-black/55" />
 
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
         {relativeDate && (

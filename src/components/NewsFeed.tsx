@@ -13,7 +13,7 @@ const NEWS_CATEGORY_STYLES: Record<NewsCategory, { label: string; badge: string 
   },
   Sistemas: {
     label: 'Sistemas',
-    badge: 'bg-red-50 dark:bg-red-950/40 text-brand-primary ring-red-100',
+    badge: 'bg-brand-tint text-brand-primary ring-brand-primary/15',
   },
 }
 
@@ -98,8 +98,8 @@ export function NewsFeed({ variant = 'grid' }: { variant?: 'grid' | 'editorial' 
       {loading ? (
         <NewsSkeleton editorial={editorial} />
       ) : error ? (
-        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 px-6 py-12 text-center">
-          <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
+        <div className="rounded-lg bg-brand-tint px-6 py-12 text-center">
+          <p className="text-sm font-medium text-danger">{error}</p>
         </div>
       ) : news.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-200 dark:border-zinc-800 bg-neutral-50 dark:bg-zinc-950 px-6 py-16 text-center">
@@ -115,10 +115,10 @@ export function NewsFeed({ variant = 'grid' }: { variant?: 'grid' | 'editorial' 
             return (
               <article
                 key={post.id}
-                className={`overflow-hidden bg-white dark:bg-zinc-900 transition-shadow hover:shadow-md ${
+                className={`overflow-hidden bg-white dark:bg-zinc-900 ${
                   editorial
-                    ? 'rounded-xl border border-neutral-200 dark:border-zinc-800 shadow-sm'
-                    : 'card-minimal flex flex-col hover:shadow-sm'
+                    ? 'rounded-xl border border-neutral-200 dark:border-zinc-800'
+                    : 'card-minimal flex flex-col'
                 }`}
               >
                 {post.imageUrl && (

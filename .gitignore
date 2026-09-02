@@ -24,6 +24,7 @@ serviceAccount*.json
 backend/.env
 backend/.env.*
 !backend/.env.example
+backend/lib
 
 # Capacitor / Android
 android/.gradle

@@ -17,7 +17,7 @@ interface MetricCardProps {
 function MetricCard({ label, value, icon, loading }: MetricCardProps) {
   return (
     <article className="card-minimal flex items-start gap-4 p-6">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/40 text-brand-primary">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-tint text-brand-primary">
         {icon}
       </div>
       <div>
@@ -130,7 +130,7 @@ export function AdminDashboard() {
           </div>
           <Link
             to="/intranet"
-            className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-primary transition-colors hover:text-red-950"
+            className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-brand-primary transition-colors hover:opacity-90"
           >
             Ver intranet
             <ArrowRight className="h-4 w-4" />

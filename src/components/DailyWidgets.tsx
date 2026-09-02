@@ -1,18 +1,15 @@
 import {
-  Cloud,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSun,
   DollarSign,
   Sun,
 } from 'lucide-react'
 import { type ReactNode, useEffect, useState } from 'react'
+import { getWeatherInfo } from '../services/dailyUtilityService'
+import { WeatherIconGlyph } from './weather/weatherIcons'
 
 interface WeatherData {
   temperature: number
   description: string
-  icon: 'sun' | 'cloud-sun' | 'cloud' | 'rain' | 'fog' | 'storm'
+  icon: ReturnType<typeof getWeatherInfo>['icon']
 }
 
 interface DollarRate {
@@ -21,24 +18,9 @@ interface DollarRate {
   venta: number
 }
 
-const WEATHER_ICONS = {
-  sun: Sun,
-  'cloud-sun': CloudSun,
-  cloud: Cloud,
-  rain: CloudRain,
-  fog: CloudFog,
-  storm: CloudLightning,
-} as const
-
-function getWeatherInfo(code: number): Pick<WeatherData, 'description' | 'icon'> {
-  if (code === 0) return { description: 'Despejado', icon: 'sun' }
-  if (code <= 3) return { description: 'Parcialmente nublado', icon: 'cloud-sun' }
-  if (code <= 48) return { description: 'Niebla', icon: 'fog' }
-  if (code <= 67) return { description: 'Lluvia', icon: 'rain' }
-  if (code <= 77) return { description: 'Nieve', icon: 'cloud' }
-  if (code <= 82) return { description: 'Chaparrones', icon: 'rain' }
-  if (code <= 99) return { description: 'Tormenta', icon: 'storm' }
-  return { description: 'Nublado', icon: 'cloud' }
+function getLocalWeatherInfo(code: number): Pick<WeatherData, 'description' | 'icon'> {
+  const { description, icon } = getWeatherInfo(code)
+  return { description, icon }
 }
 
 function formatCurrency(value: number) {
@@ -117,7 +99,7 @@ export function DailyWidgets({ variant = 'default' }: { variant?: 'default' | 'm
         return res.json()
       })
       .then((data) => {
-        const info = getWeatherInfo(data.current.weather_code as number)
+        const info = getLocalWeatherInfo(data.current.weather_code as number)
         setWeather({
           temperature: data.current.temperature_2m as number,
           ...info,
@@ -172,7 +154,11 @@ export function DailyWidgets({ variant = 'default' }: { variant?: 'default' | 'm
 
   const minimal = variant === 'minimal'
 
-  const WeatherIcon = weather ? WEATHER_ICONS[weather.icon] : Sun
+  const WeatherIcon = weather ? (
+    <WeatherIconGlyph icon={weather.icon} className="h-5 w-5" />
+  ) : (
+    <Sun className="h-5 w-5" />
+  )
 
   return (
     <section
@@ -219,7 +205,7 @@ export function DailyWidgets({ variant = 'default' }: { variant?: 'default' | 'm
                   minimal ? 'bg-neutral-100 dark:bg-zinc-800 text-neutral-700 dark:text-gray-300' : 'bg-sky-100 text-sky-600'
                 }`}
               >
-                <WeatherIcon className="h-5 w-5" />
+                {WeatherIcon}
               </div>
               <div>
                 <p className="text-2xl font-bold text-neutral-900 dark:text-gray-100">

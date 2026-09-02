@@ -157,8 +157,8 @@ export function NewsManager() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
-        <div className="border-b border-gray-100 bg-gradient-to-r from-[var(--color-primary-light)] to-white px-6 py-5 dark:from-zinc-900 dark:to-zinc-900">
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="border-b border-gray-100 bg-neutral-50 px-6 py-5 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary text-white">
               <Newspaper className="h-5 w-5" />
@@ -189,7 +189,7 @@ export function NewsManager() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ej: Nueva política de vacaciones"
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 input-brand-focus focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
 
@@ -201,7 +201,7 @@ export function NewsManager() {
                 id="news-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as NewsCategory)}
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all input-brand-focus focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-brand-primary/10"
               >
                 {CATEGORIES.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -223,7 +223,7 @@ export function NewsManager() {
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://ejemplo.com/imagen.jpg"
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 input-brand-focus focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
 
@@ -236,7 +236,7 @@ export function NewsManager() {
                 type="datetime-local"
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm text-gray-900 dark:text-gray-100 outline-none transition-all input-brand-focus focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
           </div>
@@ -252,7 +252,7 @@ export function NewsManager() {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Redactá el comunicado que verán los empleados..."
-              className="w-full resize-y rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 focus:border-blue-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+              className="w-full resize-y rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/60 px-4 py-3 text-sm leading-relaxed text-gray-900 dark:text-gray-100 outline-none transition-all placeholder:text-gray-400 input-brand-focus focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-brand-primary/10"
             />
           </div>
 
@@ -270,7 +270,7 @@ export function NewsManager() {
             <button
               type="submit"
               disabled={submitting}
-              className="btn-primary rounded-xl px-6 py-2.5 text-sm font-semibold shadow-sm hover:shadow"
+              className="btn-primary rounded-xl px-6 py-2.5 text-sm font-semibold"
             >
               {submitting
                 ? editingId
@@ -284,7 +284,7 @@ export function NewsManager() {
         </form>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="border-b border-gray-100 px-6 py-5 dark:border-zinc-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Noticias publicadas</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -297,7 +297,7 @@ export function NewsManager() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-700 border-t-transparent" />
           </div>
         ) : error ? (
-          <p className="px-6 py-16 text-center text-sm text-red-600">{error}</p>
+          <p className="px-6 py-16 text-center text-sm text-danger">{error}</p>
         ) : news.length === 0 ? (
           <p className="px-6 py-16 text-center text-sm text-gray-500 dark:text-gray-400">
             Aún no hay noticias publicadas.
@@ -351,7 +351,7 @@ export function NewsManager() {
                             onClick={() => post.id && handleDelete(post.id, post.title)}
                             disabled={deletingId === post.id}
                             aria-label={`Eliminar ${post.title}`}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger transition-colors hover:bg-brand-tint hover:text-danger disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-brand-primary-hover/40 dark:hover:text-brand-primary"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

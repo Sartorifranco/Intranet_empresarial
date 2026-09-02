@@ -76,7 +76,7 @@ export function Login() {
           className="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-8 shadow-sm"
         >
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300">
+            <div className="mb-4 rounded-lg alert-error px-4 py-3 text-sm">
               {error}
             </div>
           )}
@@ -138,7 +138,7 @@ export function Login() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 accent-red-900 dark:border-zinc-600 dark:bg-zinc-800"
+              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 accent-brand dark:border-zinc-600 dark:bg-zinc-800"
             />
             <label
               htmlFor="remember-me"

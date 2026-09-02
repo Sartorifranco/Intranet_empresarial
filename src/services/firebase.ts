@@ -18,4 +18,9 @@ const analytics = getAnalytics(app)
 const auth = getAuth(app)
 const db = getFirestore(app)
 
+if (import.meta.env.DEV) {
+  // @ts-ignore
+  window.__getIdToken = () => auth.currentUser?.getIdToken()
+}
+
 export { app, analytics, auth, db }

@@ -24,6 +24,7 @@ import {
   getUserProfile,
   type UserProfile,
 } from '../services/userService'
+import { applyPendingUserSetupAfterRegister } from '../services/usersApi'
 
 const GOOGLE_TOKEN_STORAGE_KEY = 'googleToken'
 
@@ -122,7 +123,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setGoogleAccessToken(null)
     }
 
-    await ensureGoogleUserProfile(result.user)
+    const created = await ensureGoogleUserProfile(result.user)
+    if (created) {
+      try {
+        await applyPendingUserSetupAfterRegister()
+      } catch (err) {
+        console.error('No se pudo aplicar la configuración pendiente:', err)
+      }
+    }
     await loadProfile(result.user.uid, result.user.email)
   }
 

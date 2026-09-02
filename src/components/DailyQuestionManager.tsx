@@ -216,7 +216,7 @@ export function DailyQuestionManager() {
                     <button
                       type="button"
                       onClick={() => removeOption(index)}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:text-red-600 dark:border-zinc-800"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 text-neutral-400 hover:text-brand-primary dark:border-zinc-800"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -304,7 +304,7 @@ export function DailyQuestionManager() {
                         type="button"
                         onClick={() => handleDelete(item.dateKey, formatDateKeyLabel(item.dateKey))}
                         disabled={deletingKey === item.dateKey}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger hover:bg-brand-tint"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

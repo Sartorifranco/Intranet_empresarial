@@ -1,32 +1,14 @@
-import {
-  Cloud,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSun,
-  DollarSign,
-  Sun,
-} from 'lucide-react'
+import { DollarSign } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   fetchCordobaWeather,
   fetchFxQuotes,
   formatArs,
   type FxQuote,
-  type WeatherIcon,
   type WeatherSnapshot,
 } from '../services/dailyUtilityService'
+import { getWeatherInlineIconTone, WeatherIconGlyph } from './weather/weatherIcons'
 
-const WEATHER_ICONS = {
-  sun: Sun,
-  'cloud-sun': CloudSun,
-  cloud: Cloud,
-  rain: CloudRain,
-  fog: CloudFog,
-  storm: CloudLightning,
-} as const
-
-/** Intervalo de actualización en vivo (ms). */
 const LIVE_REFRESH_MS = 60_000
 
 function QuoteItems({ quotes, keyPrefix }: { quotes: FxQuote[]; keyPrefix: string }) {
@@ -94,9 +76,7 @@ export function NavbarUtilities() {
     }
   }, [])
 
-  const WeatherIcon = weather
-    ? WEATHER_ICONS[weather.icon as WeatherIcon]
-    : CloudSun
+  const weatherIcon = weather?.icon ?? 'cloud-sun'
 
   return (
     <div className="hidden items-center gap-2 lg:flex">
@@ -104,7 +84,10 @@ export function NavbarUtilities() {
         className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 dark:border-zinc-700 dark:bg-zinc-900"
         title={weather ? `Córdoba · ${weather.description}` : 'Clima'}
       >
-        <WeatherIcon className="h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-400" />
+        <WeatherIconGlyph
+          icon={weatherIcon}
+          className={`h-3.5 w-3.5 shrink-0 ${getWeatherInlineIconTone(weatherIcon)}`}
+        />
         <span className="text-xs font-semibold tabular-nums text-neutral-800 dark:text-gray-100">
           {weather ? `${Math.round(weather.temperature)}°` : '—'}
         </span>
