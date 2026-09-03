@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { getEnv, isEmailInAllowedDomain } from '../../config/env.js'
 import { adminAuth, adminDb } from '../../lib/firebase/admin.js'
 import { logError } from '../../lib/log.js'
+import { normalizeActionGrants, type ActionGrants } from '../drive/governanceActions.js'
 
 export interface AuthedUserPermissions {
   super_admin?: boolean
@@ -14,6 +15,7 @@ export interface AuthedUser {
   displayName: string
   role?: string
   managedAreaIds: string[]
+  actionGrants: ActionGrants
   permissions: AuthedUserPermissions
 }
 
@@ -89,6 +91,7 @@ export async function requireWorkspaceUser(
         email,
       role: typeof role === 'string' ? role : undefined,
       managedAreaIds,
+      actionGrants: normalizeActionGrants(profile.get('actionGrants')),
       permissions,
     }
     next()

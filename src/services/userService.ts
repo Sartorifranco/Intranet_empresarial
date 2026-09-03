@@ -26,6 +26,14 @@ export type UserDepartment = string
 
 export type UserRole = 'super_admin' | 'admin' | 'user'
 
+export type GovernanceAction =
+  | 'approval'
+  | 'permission_grant'
+  | 'classification_change'
+  | 'authorized_copy'
+
+export type ActionGrants = Partial<Record<GovernanceAction, string[]>>
+
 /**
  * @deprecated Reemplazado por `role` (+ `managedAreaIds` para admins de área).
  * Se mantiene por compatibilidad con código que aún lee flags booleanos.
@@ -55,6 +63,8 @@ export interface UserProfile {
   role: UserRole
   /** Solo aplica si role === 'admin'. IDs de carpetas de primer nivel / áreas que gobierna. */
   managedAreaIds?: string[]
+  /** Excepciones de gobernanza por acción y área (cualquier rol excepto super_admin). */
+  actionGrants?: ActionGrants
   /** Áreas a las que pertenece (fan-out Drive, directorio interno). Cualquier rol. */
   memberAreaIds?: string[]
   /**
@@ -113,6 +123,38 @@ export function resolveRoleForEmail(email: string | null | undefined): UserRole 
 
 function isValidRole(value: unknown): value is UserRole {
   return typeof value === 'string' && (VALID_ROLES as readonly string[]).includes(value)
+}
+
+function normalizeStringArray(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const item of raw) {
+    if (typeof item !== 'string') continue
+    const trimmed = item.trim()
+    if (!trimmed || seen.has(trimmed)) continue
+    seen.add(trimmed)
+    out.push(trimmed)
+  }
+  return out
+}
+
+const GOVERNANCE_ACTIONS: readonly GovernanceAction[] = [
+  'approval',
+  'permission_grant',
+  'classification_change',
+  'authorized_copy',
+]
+
+function normalizeActionGrants(raw: unknown): ActionGrants {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const source = raw as Record<string, unknown>
+  const out: ActionGrants = {}
+  for (const action of GOVERNANCE_ACTIONS) {
+    const ids = normalizeStringArray(source[action])
+    if (ids.length > 0) out[action] = ids
+  }
+  return out
 }
 
 /** Deriva el role desde el documento (con fallback hasta que corra la migración). */
@@ -186,6 +228,11 @@ function mapDocToUserProfile(uid: string, data: DocumentData): UserProfile {
     profile.memberAreaIds = (data.memberAreaIds as unknown[]).filter(
       (id): id is string => typeof id === 'string' && id.length > 0,
     )
+  }
+
+  const actionGrants = normalizeActionGrants(data.actionGrants)
+  if (Object.keys(actionGrants).length > 0) {
+    profile.actionGrants = actionGrants
   }
 
   return profile

@@ -105,6 +105,7 @@ function provisioningActor(pending: PendingUserSetupData): AuthedUser {
     email: pending.createdByEmail ?? 'intranet@system',
     displayName: 'Auto-aprovisionamiento',
     managedAreaIds: [],
+    actionGrants: {},
     permissions: {},
   }
 }

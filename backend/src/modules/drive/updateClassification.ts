@@ -8,8 +8,8 @@ import {
   writeFileClassification,
 } from './classification.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
@@ -61,8 +61,8 @@ export async function updateDriveFileClassification(req: Request, res: Response)
   }
 
   const governingAreaId = await resolveFileGoverningAreaId(fileId, found.file.parentFolderId)
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'classification_change', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('classification_change') })
     return
   }
 

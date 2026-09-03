@@ -6,8 +6,8 @@ import { logError } from '../../lib/log.js'
 import { writeAuditLogBestEffort } from '../audit/writeAuditLog.js'
 import { getFileInSharedDrive, googleUserMessage } from './assertInSharedDrive.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { grantUserDrivePermission, isPermissionRole } from './driveUserPermission.js'
@@ -64,8 +64,8 @@ export async function grantDriveAreaPermission(req: Request, res: Response): Pro
     return
   }
 
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'permission_grant', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('permission_grant') })
     return
   }
 

@@ -5,8 +5,8 @@ import { logError } from '../../lib/log.js'
 import { getFileInSharedDrive, googleStatus, googleUserMessage } from './assertInSharedDrive.js'
 import { getStoredClassification, type FileClassification } from './classification.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { getAreaDisplayName, resolveAreaMembers } from './resolveAreaMembers.js'
@@ -49,8 +49,8 @@ export async function listDrivePermissions(req: Request, res: Response): Promise
   }
 
   const governingAreaId = await resolveFileGoverningAreaId(fileId, found.file.parentFolderId)
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'permission_grant', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('permission_grant') })
     return
   }
 
