@@ -17,6 +17,17 @@ export interface GoverningArea {
   parentFolderId: null
   allowedUsers: string[]
   createdAt: Timestamp | Date
+  legacy?: boolean
+}
+
+function isLegacyArea(data: DocumentData): boolean {
+  return data.legacy === true
+}
+
+function isAssignableArea(data: DocumentData, name: string): boolean {
+  if (isLegacyArea(data)) return false
+  if (isSharedAreasFolder(name)) return false
+  return true
 }
 
 function toDate(value: Timestamp | Date): Date {
@@ -39,14 +50,17 @@ function mapRootArea(id: string, data: DocumentData): GoverningArea {
     parentFolderId: null,
     allowedUsers,
     createdAt: data.createdAt ? toDate(data.createdAt as Timestamp) : new Date(),
+    legacy: data.legacy === true ? true : undefined,
   }
 }
 
-/** Catálogo de áreas gobernantes (documentos raíz en `folders/`). */
+/** Catálogo de áreas gobernantes (documentos raíz en `folders/`), sin legacy ni bucket transversal. */
 export async function listRootAreas(): Promise<GoverningArea[]> {
   const rootsQuery = query(collection(db, AREAS_COLLECTION), where('parentFolderId', '==', null))
   const snapshot = await getDocs(rootsQuery)
-  const areas = snapshot.docs.map((docSnap) => mapRootArea(docSnap.id, docSnap.data()))
+  const areas = snapshot.docs
+    .map((docSnap) => mapRootArea(docSnap.id, docSnap.data()))
+    .filter((area) => !area.legacy)
   areas.sort((a, b) => a.name.localeCompare(b.name, 'es'))
   return areas
 }
@@ -55,8 +69,13 @@ export function isSharedAreasFolder(name: string): boolean {
   return name.trim().toLowerCase() === 'compartido entre áreas'
 }
 
-/** Áreas raíz excluyendo el bucket transversal "Compartido entre áreas". */
+/** Áreas raíz asignables en perfiles (excluye legacy y "Compartido entre áreas"). */
 export async function listAssignableRootAreas(): Promise<GoverningArea[]> {
-  const areas = await listRootAreas()
-  return areas.filter((area) => !isSharedAreasFolder(area.name))
+  const rootsQuery = query(collection(db, AREAS_COLLECTION), where('parentFolderId', '==', null))
+  const snapshot = await getDocs(rootsQuery)
+  const areas = snapshot.docs
+    .filter((docSnap) => isAssignableArea(docSnap.data(), typeof docSnap.get('name') === 'string' ? docSnap.get('name') : docSnap.id))
+    .map((docSnap) => mapRootArea(docSnap.id, docSnap.data()))
+  areas.sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  return areas
 }

@@ -434,7 +434,7 @@ export function AdminDriveLab() {
         </div>
 
         <section className="mt-6 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="grid grid-cols-[minmax(250px,2fr)_minmax(120px,0.8fr)_minmax(160px,1fr)_48px] border-b border-neutral-200 bg-neutral-50/70 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-500">
+          <div className="grid grid-cols-[minmax(250px,2fr)_minmax(120px,0.8fr)_minmax(160px,1fr)_minmax(72px,auto)] border-b border-neutral-200 bg-neutral-50/70 px-4 py-2.5 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-500">
             <span>Nombre</span>
             <span className="hidden md:block">Propietario</span>
             <span className="hidden sm:block">Última modificación</span>
@@ -474,7 +474,7 @@ export function AdminDriveLab() {
                   <li
                     key={file.id}
                     onDoubleClick={() => openItem(file)}
-                    className="grid min-h-16 grid-cols-[minmax(250px,2fr)_minmax(120px,0.8fr)_minmax(160px,1fr)_48px] items-center px-4 transition-colors hover:bg-neutral-50 dark:hover:bg-zinc-900/70"
+                    className="grid min-h-16 grid-cols-[minmax(250px,2fr)_minmax(120px,0.8fr)_minmax(160px,1fr)_minmax(72px,auto)] items-center px-4 transition-colors hover:bg-neutral-50 dark:hover:bg-zinc-900/70"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <Icon className={`h-5 w-5 shrink-0 ${kindColor[kind]}`} />
@@ -516,7 +516,21 @@ export function AdminDriveLab() {
                     <span className="hidden text-sm text-neutral-500 dark:text-zinc-400 sm:block">
                       {formatModified(file.modifiedTime)}
                     </span>
-                    <div className="relative ml-auto">
+                    <div className="relative ml-auto flex items-center justify-end gap-0.5">
+                      {canGovernFile(file) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveMenuId(null)
+                            setPermissionsTarget(file)
+                          }}
+                          aria-label={`Permisos de ${file.name}`}
+                          title="Permisos"
+                          className="rounded-full p-2 text-neutral-400 hover:bg-neutral-100 hover:text-brand-primary dark:hover:bg-zinc-800 dark:hover:text-brand-primary"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() =>
