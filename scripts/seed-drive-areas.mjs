@@ -15,13 +15,10 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dryRun = !process.argv.includes('--apply')
 
-/** Raíces viejas: no reutilizar aunque el nombre coincida. */
-const LEGACY_ROOT_IDS = new Set([
-  'mnCpjJYbw761Mae06MQs', // Sistemas (vieja)
-  'yKI3EZmt80MfTyfAdIz5', // UIF (vieja)
-])
-
-/** name exacto (raíz) → emails de jefes */
+function pickReusableRoot(candidates) {
+  const usable = candidates.filter((folder) => folder.legacy !== true)
+  return usable[0] ?? null
+}
 const AREAS = [
   { name: 'Administracion', chiefs: ['contable@bacarsa.com.ar'] },
   { name: 'Comercial', chiefs: ['ivan.barrera@bacarsa.com.ar'] },
@@ -84,11 +81,6 @@ function normEmail(email) {
   return email.trim().toLowerCase()
 }
 
-function pickReusableRoot(candidates) {
-  const usable = candidates.filter((folder) => !LEGACY_ROOT_IDS.has(folder.id))
-  return usable[0] ?? null
-}
-
 function rolePatch(currentRole) {
   if (currentRole === 'super_admin' || currentRole === 'admin') return null
   return 'admin'
@@ -113,6 +105,7 @@ async function main() {
     list.push({
       id: docSnap.id,
       governingAreaId: docSnap.get('governingAreaId') ?? null,
+      legacy: docSnap.get('legacy') === true,
     })
     rootsByName.set(name, list)
   }
