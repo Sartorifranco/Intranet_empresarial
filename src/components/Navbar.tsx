@@ -22,7 +22,6 @@ export function Navbar() {
   const permissions = userProfile?.permissions ?? DEFAULT_PERMISSIONS
   const canAccessAdmin = isSuperAdmin(userProfile)
   const canAccessAudit = isSuperAdmin(userProfile)
-  const canAccessAreaAdmin = userProfile?.role === 'admin'
   const boardsVisible = useBoardsVisibility()
   const canAccessBoards = boardsVisible === true
 
@@ -72,13 +71,6 @@ export function Navbar() {
           {canAccessBoards && (
             <NavLink to="/tableros" className={navLinkClass}>
               Tableros
-            </NavLink>
-          )}
-          {settings.resourcesEnabled &&
-            permissions.view_drive &&
-            canAccessAreaAdmin && (
-            <NavLink to="/mis-areas" className={navLinkClass}>
-              Mis áreas
             </NavLink>
           )}
           {canAccessAudit && (
