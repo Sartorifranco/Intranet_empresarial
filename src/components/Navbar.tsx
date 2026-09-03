@@ -1,4 +1,4 @@
-import { LayoutDashboard, LayoutGrid, LogOut, Moon, Sun } from 'lucide-react'
+import { LogOut, Moon, Sun } from 'lucide-react'
 import { signOut } from 'firebase/auth'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth, useTheme } from '../context'
@@ -57,10 +57,7 @@ export function Navbar() {
             Inicio
           </NavLink>
           <NavLink to="/accesos-directos" className={navLinkClass}>
-            <span className="inline-flex items-center gap-1.5">
-              <LayoutGrid className="h-4 w-4" />
-              Accesos directos
-            </span>
+            Accesos directos
           </NavLink>
           {settings.directoryEnabled && permissions.view_directory && (
             <NavLink to="/directorio" className={navLinkClass}>
@@ -74,10 +71,7 @@ export function Navbar() {
           )}
           {canAccessBoards && (
             <NavLink to="/tableros" className={navLinkClass}>
-              <span className="inline-flex items-center gap-1.5">
-                <LayoutDashboard className="h-4 w-4" />
-                Tableros
-              </span>
+              Tableros
             </NavLink>
           )}
           {settings.resourcesEnabled &&
