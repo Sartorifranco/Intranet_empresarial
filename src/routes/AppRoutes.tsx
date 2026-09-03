@@ -9,7 +9,6 @@ import {
   AdminResources,
   AdminShifts,
   AdminUsers,
-  AreaAdminResources,
   AppsHub,
   BoardList,
   BoardViewerPage,
@@ -23,7 +22,6 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { AdminRoute } from './AdminRoute'
 import { BoardsRoute } from './BoardsRoute'
 import { SuperAdminRoute } from './SuperAdminRoute'
-import { AreaAdminRoute } from './AreaAdminRoute'
 import { ModulePermissionRoute } from './ModulePermissionRoute'
 
 export function AppRoutes() {
@@ -50,9 +48,7 @@ export function AppRoutes() {
             </Route>
             <Route element={<ModulePermissionRoute permission="view_drive" module="resourcesEnabled" />}>
               <Route path="recursos" element={<Resources />} />
-              <Route element={<AreaAdminRoute />}>
-                <Route path="mis-areas" element={<AreaAdminResources />} />
-              </Route>
+              <Route path="mis-areas" element={<Navigate to="/recursos" replace />} />
             </Route>
 
             <Route element={<BoardsRoute />}>
