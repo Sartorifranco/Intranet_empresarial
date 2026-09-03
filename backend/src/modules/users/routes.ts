@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express'
 import { Router } from 'express'
-import { requireWorkspaceUser } from '../auth/middleware.js'
+import { requireSuperAdmin, requireWorkspaceUser } from '../auth/middleware.js'
 import { applyPendingUserSetupForNewUser } from './applyPendingUserSetup.js'
+import { patchUserActionGrants } from './patchUserActionGrants.js'
 
 export const usersRouter = Router()
 
@@ -24,4 +25,12 @@ usersRouter.post(
 
     res.json(result)
   },
+)
+
+/** Excepciones de gobernanza por acción y área (solo super_admin, Admin SDK). */
+usersRouter.patch(
+  '/:uid/action-grants',
+  requireWorkspaceUser,
+  requireSuperAdmin,
+  patchUserActionGrants,
 )

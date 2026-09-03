@@ -4,8 +4,8 @@ import { writeAuditLogBestEffort } from '../audit/writeAuditLog.js'
 import { getFileInSharedDrive } from './assertInSharedDrive.js'
 import { getStoredStatus, writeFileStatus } from './classification.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { invalidateDriveMetadataForUser } from './driveMetadataCache.js'
@@ -53,8 +53,8 @@ export async function updateDriveFileStatus(req: Request, res: Response): Promis
 
   const governingAreaId = await resolveFileGoverningAreaId(fileId, found.file.parentFolderId)
 
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'approval', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('approval') })
     return
   }
 

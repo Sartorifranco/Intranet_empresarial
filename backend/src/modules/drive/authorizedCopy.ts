@@ -11,8 +11,8 @@ import {
   writeFileClassificationBestEffort,
 } from './classification.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { getMinReasonLength } from './policy.js'
@@ -81,8 +81,8 @@ export async function createAuthorizedCopy(req: Request, res: Response): Promise
   }
 
   const governingAreaId = await resolveFileGoverningAreaId(fileId, found.file.parentFolderId)
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'authorized_copy', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('authorized_copy') })
     return
   }
 

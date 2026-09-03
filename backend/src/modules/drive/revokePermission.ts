@@ -5,11 +5,13 @@ import { logError } from '../../lib/log.js'
 import { writeAuditLogBestEffort } from '../audit/writeAuditLog.js'
 import { getFileInSharedDrive, googleStatus, googleUserMessage } from './assertInSharedDrive.js'
 import {
-  canGovernDriveFile,
-  GOVERN_DRIVE_FORBIDDEN,
+  canPerformGovernanceAction,
+  governanceForbiddenMessage,
   resolveFileGoverningAreaId,
 } from './governDriveFile.js'
 import { getMinReasonLength } from './policy.js'
+import { invalidateDriveMetadataForEmail, invalidateDriveMetadataForUser } from './driveMetadataCache.js'
+import { resolveDriveSubject } from './driveSubject.js'
 
 export async function revokeDrivePermission(req: Request, res: Response): Promise<void> {
   const user = req.authedUser
@@ -51,8 +53,8 @@ export async function revokeDrivePermission(req: Request, res: Response): Promis
   }
 
   const governingAreaId = await resolveFileGoverningAreaId(fileId, found.file.parentFolderId)
-  if (!canGovernDriveFile(user, governingAreaId)) {
-    res.status(403).json({ error: GOVERN_DRIVE_FORBIDDEN })
+  if (!canPerformGovernanceAction(user, 'permission_grant', governingAreaId)) {
+    res.status(403).json({ error: governanceForbiddenMessage('permission_grant') })
     return
   }
 
@@ -116,6 +118,11 @@ export async function revokeDrivePermission(req: Request, res: Response): Promis
       type: permType,
     },
   })
+
+  invalidateDriveMetadataForUser(resolveDriveSubject(user), user.uid)
+  if (typeof granteeEmail === 'string' && granteeEmail.includes('@')) {
+    await invalidateDriveMetadataForEmail(granteeEmail)
+  }
 
   res.json({ id: permissionId, revoked: true })
 }

@@ -4,6 +4,7 @@ import { adminDb } from '../../lib/firebase/admin.js'
 import { logError } from '../../lib/log.js'
 import { googleStatus, googleUserMessage } from '../drive/assertInSharedDrive.js'
 import type { AuthedUser } from '../auth/middleware.js'
+import { normalizeActionGrants } from '../drive/governanceActions.js'
 import { canViewBoard } from './boardAccess.js'
 import { boardsFeatureConfigured } from './policy.js'
 import {
@@ -60,6 +61,7 @@ async function authedUserFromBoardSession(
       session.email,
     role: typeof role === 'string' ? role : undefined,
     managedAreaIds,
+    actionGrants: normalizeActionGrants(profile.get('actionGrants')),
     permissions,
   }
 }
