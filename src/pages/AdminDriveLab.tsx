@@ -10,14 +10,12 @@ import {
   Grid2X2,
   List,
   Loader2,
-  Moon,
   MoreVertical,
   Plus,
   Search,
   Share2,
   Shield,
   SlidersHorizontal,
-  Sun,
   Trash2,
   Upload,
   X,
@@ -26,7 +24,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { DrivePermissionsModal } from '../components/DrivePermissionsModal'
-import { useAuth, useTheme } from '../context'
+import { useAuth } from '../context'
 import {
   approveDriveFile,
   createDriveFile,
@@ -102,7 +100,6 @@ function formatModified(value: string | null): string {
 }
 
 export function AdminDriveLab() {
-  const { isDark, toggleTheme } = useTheme()
   const { user, userProfile } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -316,16 +313,6 @@ export function AdminDriveLab() {
               className="h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-11 pr-4 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 dark:focus:border-brand-primary"
             />
           </label>
-
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
-            className="ml-auto inline-flex h-10 items-center gap-2 rounded-lg border border-neutral-200 px-3 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            <span className="hidden sm:inline">{isDark ? 'Claro' : 'Oscuro'}</span>
-          </button>
         </div>
       </header>
 
