@@ -270,7 +270,11 @@ export async function runRagAssistant(input: {
     })
   }
 
-  if (intent.wantsEmailFromHistory && !intent.wantsCalendar) {
+  if (
+    intent.wantsEmailFromHistory &&
+    !intent.wantsCalendar &&
+    !intent.wantsSummarize
+  ) {
     const emailFromHistory = await tryPrepareEmailFromHistory({
       question: input.question,
       history,
@@ -399,7 +403,7 @@ export async function runRagAssistant(input: {
         const compactSummaries = batch.summaries
           .map(
             (item) =>
-              `***REMOVED******REMOVED*** ${item.fileName}\n${item.summary.slice(0, 1500)}${item.summary.length > 1500 ? '…' : ''}`,
+              `## ${item.fileName}\n${item.summary.slice(0, 1500)}${item.summary.length > 1500 ? '…' : ''}`,
           )
           .join('\n\n')
         questionForModel = [input.question, '', compactSummaries, '', hint].join('\n')

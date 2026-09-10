@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
 const TEMP_PASSWORD_CHARS =
-  'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@***REMOVED***$%^&*'
+  'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*'
 
 /** Contraseña temporal criptográficamente aleatoria (sin prefijo fijo en código). */
 export function generateTemporaryPassword(length = 20): string {

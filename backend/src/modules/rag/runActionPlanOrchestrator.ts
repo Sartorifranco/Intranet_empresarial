@@ -11,6 +11,7 @@ import {
 import type { RagToolContext } from './executeRagTool.js'
 import type { RagConversationTurn } from './runRagAssistant.js'
 import type { QuestionIntent } from './assistantIntent.js'
+import { buildEmailQuestionWithContext, isContinuingEmailThread } from './emailConversationContext.js'
 import {
   extractPendingEmailDraftFromHistory,
   isEmailDraftFollowUpQuestion,
@@ -236,8 +237,12 @@ export async function runActionPlanOrchestrator(input: {
 
   let extracted
   try {
+    const planQuestion = isContinuingEmailThread(input.question, input.history)
+      ? buildEmailQuestionWithContext(input.question, input.history)
+      : input.question
+
     extracted = await extractActionPlan({
-      question: input.question,
+      question: planQuestion,
       history: input.history,
       context: actionContext,
       usageMeter: input.toolCtx.usageMeter,

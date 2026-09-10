@@ -58,7 +58,7 @@ function extractSpreadsheetText(buffer: Buffer): string {
     if (!sheet) continue
     const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: false }).trim()
     if (!csv) continue
-    parts.push(`***REMOVED*** ${sheetName}\n${csv}`)
+    parts.push(`# ${sheetName}\n${csv}`)
   }
 
   return normalizeExtractedText(parts.join('\n\n'))

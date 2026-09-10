@@ -1,5 +1,9 @@
 import { todayInTimeZone } from '../assistant-actions/calendarDateTime.js'
 import { parseCalendarReadRange, type CalendarReadRange } from './parseCalendarReadRange.js'
+import {
+  isContinuingEmailThread,
+  matchesEmailPrepareIntent,
+} from './emailConversationContext.js'
 
 const SUMMARIZE_RE =
   /\b(resum(e|ir|o|en|ame|á|ar|arios?)|sintetiz(a|ar|á)|hac[eé]\s+(un\s+)?resumen)\b/i
@@ -7,10 +11,12 @@ const PDF_RE = /\bpdf\b/i
 const WORD_RE = /\b(word|docx|documentos?\s+word)\b/i
 const ALL_FILES_RE = /\b(todos?\s*(los\s*)?(archivos?|documentos?)|todos?\s+los\s+pdf)\b/i
 const COUNT_RE = /\b(\d{1,2})\s*(pdf|archivos?|documentos?)\b/i
+const FILE_NAME_IN_QUESTION_RE =
+  /(?:^|[^\w.])([\w@.\s()-]{2,120}\.(?:docx|doc|pdf|txt))(?:\b|$)/i
 const LIST_FILES_RE =
   /\b(qu[eé]\s+archivos|list(a|ar|ame)\s+(los\s+)?archivos|mi\s+carpeta|contenido\s+de\s+(la\s+)?carpeta|qu[eé]\s+tengo\s+en\s+(drive|archivos|sistemas|mi\s+carpeta))\b/i
 const EMAIL_PREP_RE =
-  /\b(envi[aá](r|me|le|ale|ame)?|mand[aá](r|me|le|ale|ame)?|correos?|mails?|e-?mails?|prepar[aá]me)\b/i
+  /\b(envi[aá](r|me|le|ale|ame)?|mand[aá](r|me|le|ale|ame)?|correos?|mails?|e-?mails?|prepar[aá](?:me|le|ale|ále)?)\b/i
 /** Imperativo / creación — no matchea el sustantivo "agenda". Lookahead evita falsos negativos con acentos (JS \\b). */
 const CALENDAR_CREATE_RE =
   /(?:^|[^\p{L}])(?:agend(?:ar|ame|emos|á(?:me)?|ale)|prepar(?:a|á|ar|ame|áme)\s+(?:un\s+)?(?:evento|reuni[oó]n)|cre(?:a|á|ar|ame|áme)\s+(?:un\s+)?(?:evento|reuni[oó]n)|program(?:a|á|ar|ame|áme)\s+(?:un\s+)?(?:evento|reuni[oó]n)|invit(?:a|á|ar|ame|áme|ale))(?=[^\p{L}]|$)/iu
@@ -41,6 +47,8 @@ export type SummarizeIntent = {
   limit: number | null
   fileKinds: Array<'PDF' | 'Word' | 'Texto' | 'Documento Google'>
   includeAllSummarizeable: boolean
+  /** Si el usuario nombró un archivo concreto (ej. ATM.docx). */
+  fileNameHint?: string
 }
 
 export type QuestionIntent = {
@@ -152,15 +160,21 @@ export function analyzeQuestionIntent(
   const wantsCalendar = CALENDAR_CREATE_RE.test(text)
   const wantsCalendarCancel = !wantsCalendar && isCalendarCancelQuery(text, history)
   const wantsCalendarRead = !wantsCalendar && !wantsCalendarCancel && CALENDAR_READ_RE.test(text)
-  const wantsEmail = EMAIL_PREP_RE.test(text)
+  const continuingEmailThread = isContinuingEmailThread(text, history)
+  const wantsEmail =
+    EMAIL_PREP_RE.test(text) ||
+    matchesEmailPrepareIntent(text) ||
+    continuingEmailThread
   const wantsEmailFromHistory =
     wantsEmail &&
-    EMAIL_BODY_FROM_HISTORY_RE.test(text) &&
+    (EMAIL_BODY_FROM_HISTORY_RE.test(text) ||
+      continuingEmailThread ||
+      (historyHasRecentSummaries(history) && !EXPLICIT_DOCUMENT_SUMMARIZE_RE.test(text))) &&
     !EXPLICIT_DOCUMENT_SUMMARIZE_RE.test(text)
   const wantsGmailInboxToday =
     GMAIL_INBOX_TODAY_RE.test(text) && !wantsCalendarRead && !wantsCalendar
   const wantsSummarize =
-    SUMMARIZE_RE.test(text) && !wantsEmailFromHistory
+    SUMMARIZE_RE.test(text) && !wantsEmailFromHistory && !continuingEmailThread
   const wantsListFiles = LIST_FILES_RE.test(text)
 
   let summarize: SummarizeIntent | null = null
@@ -173,10 +187,13 @@ export function analyzeQuestionIntent(
     if (fileKinds.length === 0) {
       fileKinds.push('PDF', 'Word', 'Texto', 'Documento Google')
     }
+    const fileNameMatch = FILE_NAME_IN_QUESTION_RE.exec(text)
+    const fileNameHint = fileNameMatch?.[1]?.trim().replace(/\s+/g, ' ')
     summarize = {
       limit: limit && Number.isFinite(limit) ? limit : null,
       fileKinds,
       includeAllSummarizeable: ALL_FILES_RE.test(text) || (!limit && fileKinds.length > 0),
+      fileNameHint: fileNameHint && fileNameHint.length >= 5 ? fileNameHint : undefined,
     }
   }
 

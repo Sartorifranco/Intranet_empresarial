@@ -5,6 +5,11 @@ import { validateActionPlan, ActionPlanValidationError, type ValidatedActionPlan
 import type { ActionContext, ActionPlan } from './actionPlanTypes.js'
 import type { RagConversationTurn } from './runRagAssistant.js'
 import type { IntranetContact } from './intranetContacts.js'
+import {
+  extractEmailSubjectFromText,
+  inferDefaultEmailSubject,
+  isContinuingEmailThread,
+} from './emailConversationContext.js'
 import { isEmailDraftFollowUpQuestion } from './emailDraftFromHistory.js'
 
 const SUBMIT_ACTION_PLAN_TOOL: GeminiFunctionDeclaration = {
@@ -161,6 +166,15 @@ function buildPlanUserPrompt(input: {
       'El usuario está pidiendo MODIFICAR el borrador de correo anterior (ej. agregar destinatario). Mantené el mismo cuerpo (reuse_draft) salvo que pida cambiar el texto.',
     )
   }
+  const subjectFromUser = extractEmailSubjectFromText(input.question)
+  if (subjectFromUser) {
+    contextLines.push(`Asunto indicado por el usuario para el correo: "${subjectFromUser}".`)
+  }
+  if (isContinuingEmailThread(input.question, input.history)) {
+    contextLines.push(
+      'El usuario está continuando un pedido de correo anterior (p. ej. aclaró el asunto). NO resumas documentos nuevos: prepará el email con el cuerpo ya generado en el historial (previous_assistant o reuse_draft).',
+    )
+  }
   if (
     input.context.calendarEventsCatalog &&
     input.context.calendarEventsCatalog.length > 0
@@ -224,10 +238,17 @@ export async function extractActionPlan(input: {
     )
   }
 
+  const defaultEmailSubject = inferDefaultEmailSubject({
+    question: input.question,
+    summariesText: context.summariesText,
+    emailBodyFallback: context.emailBodyFallback,
+  })
+
   return validateActionPlan(planCall.args, {
     calendarEventsCatalog: context.calendarEventsCatalog,
     organizerEmail: context.organizerEmail,
     intranetContacts: input.intranetContacts ?? [],
+    defaultEmailSubject,
   })
 }
 

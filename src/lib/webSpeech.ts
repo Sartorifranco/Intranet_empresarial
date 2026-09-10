@@ -44,7 +44,7 @@ export function pickSpanishVoice(): SpeechSynthesisVoice | null {
 export function plainTextForSpeech(markdown: string): string {
   return markdown
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/[***REMOVED****_`>~]/g, '')
+    .replace(/[#*_`>~]/g, '')
     .replace(/\n+/g, '. ')
     .trim()
 }

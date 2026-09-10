@@ -122,10 +122,21 @@ function resolveCorporateRecipientList(
   return normalized
 }
 
+function resolveEmailSubject(raw: unknown, fallback?: string): string {
+  if (typeof raw === 'string' && raw.trim()) {
+    return assertNonEmptyString(raw, 'Asunto', 300)
+  }
+  if (fallback?.trim()) {
+    return assertNonEmptyString(fallback.trim(), 'Asunto', 300)
+  }
+  throw new ActionPlanValidationError('Asunto es obligatorio.')
+}
+
 function validateEmailAction(
   raw: Record<string, unknown>,
   index: number,
   contacts: IntranetContact[],
+  defaultEmailSubject?: string,
 ): PlannedEmailAction {
   const ref =
     typeof raw.ref === 'string' && raw.ref.trim()
@@ -137,7 +148,7 @@ function validateEmailAction(
     max: 20,
   })
   const cc = resolveCorporateRecipientList(raw.cc, 'CC', contacts, { max: 20 })
-  const subject = assertNonEmptyString(raw.subject, 'Asunto', 300)
+  const subject = resolveEmailSubject(raw.subject, defaultEmailSubject)
   const bodySource = parseBodySource(raw.bodySource)
 
   return { kind: 'email', ref, to, cc, subject, bodySource }
@@ -239,13 +250,16 @@ function validatePlannedAction(
   catalog: CalendarEventCatalogEntry[] | undefined,
   organizerEmail: string | undefined,
   contacts: IntranetContact[],
+  defaultEmailSubject?: string,
 ): PlannedAction {
   if (!raw || typeof raw !== 'object') {
     throw new ActionPlanValidationError(`Acción ${index + 1} inválida.`)
   }
   const record = raw as Record<string, unknown>
   const kind = record.kind
-  if (kind === 'email') return validateEmailAction(record, index, contacts)
+  if (kind === 'email') {
+    return validateEmailAction(record, index, contacts, defaultEmailSubject)
+  }
   if (kind === 'calendar_event') return validateCalendarAction(record, index, organizerEmail)
   if (kind === 'calendar_cancel') return validateCalendarCancelAction(record, index, catalog)
   throw new ActionPlanValidationError(`Acción ${index + 1}: kind desconocido "${String(kind)}".`)
@@ -265,11 +279,13 @@ export function validateActionPlan(
     calendarEventsCatalog?: CalendarEventCatalogEntry[]
     organizerEmail?: string
     intranetContacts?: IntranetContact[]
+    defaultEmailSubject?: string
   },
 ): ValidatedActionPlanResult {
   const catalog = options?.calendarEventsCatalog
   const organizerEmail = options?.organizerEmail?.trim().toLowerCase()
   const contacts = options?.intranetContacts ?? []
+  const defaultEmailSubject = options?.defaultEmailSubject?.trim()
   if (!raw || typeof raw !== 'object') {
     throw new ActionPlanValidationError('El plan de acciones está vacío o es inválido.')
   }
@@ -290,7 +306,16 @@ export function validateActionPlan(
 
   actionsRaw.forEach((item, index) => {
     try {
-      actions.push(validatePlannedAction(item, index, catalog, organizerEmail, contacts))
+      actions.push(
+        validatePlannedAction(
+          item,
+          index,
+          catalog,
+          organizerEmail,
+          contacts,
+          defaultEmailSubject,
+        ),
+      )
     } catch (err) {
       validationFailures.push({
         ref: actionRef(item, index),

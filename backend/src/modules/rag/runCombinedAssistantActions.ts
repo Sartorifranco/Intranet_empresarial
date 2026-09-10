@@ -2,6 +2,11 @@ import { parseCalendarFromNaturalLanguage } from '../assistant-actions/parseCale
 import { prepareCalendarDraftTool } from '../assistant-actions/prepareCalendarDraft.js'
 import { prepareEmailDraftTool } from '../assistant-actions/prepareEmailDraft.js'
 import { analyzeQuestionIntent, type QuestionIntent } from './assistantIntent.js'
+import {
+  buildEmailQuestionWithContext,
+  extractEmailSubjectFromText,
+  isContinuingEmailThread,
+} from './emailConversationContext.js'
 import { isEmailDraftFollowUpQuestion } from './emailDraftFromHistory.js'
 import type { RagToolContext } from './executeRagTool.js'
 import type { RagConversationTurn } from './runRagAssistant.js'
@@ -24,9 +29,7 @@ function extractSummaryBodyFromHistory(history: RagConversationTurn[]): string {
 }
 
 function extractEmailSubject(question: string): string | null {
-  const quoted =
-    /asunto\s+"([^"]+)"/i.exec(question) ?? /asunto\s+'([^']+)'/i.exec(question)
-  return quoted?.[1]?.trim() ?? null
+  return extractEmailSubjectFromText(question)
 }
 
 function extractPreviousAssistantContent(history: RagConversationTurn[]): string | null {
@@ -215,6 +218,14 @@ export function inferIntentFromConversation(
   const direct = analyzeQuestionIntent(question, history)
   if (isEmailDraftFollowUpQuestion(question)) {
     return { ...direct, wantsEmail: true, wantsSummarize: false }
+  }
+  if (isContinuingEmailThread(question, history)) {
+    return {
+      ...direct,
+      wantsEmail: true,
+      wantsSummarize: false,
+      wantsEmailFromHistory: true,
+    }
   }
   if (
     direct.wantsSummarize ||

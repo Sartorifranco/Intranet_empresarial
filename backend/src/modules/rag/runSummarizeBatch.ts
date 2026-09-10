@@ -17,16 +17,34 @@ function selectFilesForSummarize(
   intent: SummarizeIntent,
   maxBatch = MAX_SUMMARIZE_BATCH,
 ): { selected: AccessibleDriveFile[]; skipped: AccessibleDriveFile[] } {
-  const candidates = files
+  const nameHint = intent.fileNameHint?.trim().toLowerCase()
+  let candidates = files
     .filter((file) => isSummarizeableKind(file.fileKind))
-    .filter((file) => intent.fileKinds.includes(file.fileKind as SummarizeIntent['fileKinds'][number]))
-    .sort((a, b) => {
+    .filter((file) =>
+      intent.fileKinds.includes(file.fileKind as SummarizeIntent['fileKinds'][number]),
+    )
+
+  if (nameHint) {
+    const byName = candidates.filter((file) => file.name.toLowerCase().includes(nameHint))
+    if (byName.length > 0) {
+      candidates = byName
+    } else {
+      const hintBase = nameHint.replace(/\.(docx|doc|pdf|txt)$/i, '')
+      const fuzzy = candidates.filter((file) => file.name.toLowerCase().includes(hintBase))
+      if (fuzzy.length > 0) candidates = fuzzy
+    }
+  }
+
+  candidates = candidates.sort((a, b) => {
       const aTime = a.modifiedTime ? new Date(a.modifiedTime).getTime() : 0
       const bTime = b.modifiedTime ? new Date(b.modifiedTime).getTime() : 0
       return bTime - aTime
     })
 
-  const limit = intent.limit ?? (intent.includeAllSummarizeable ? maxBatch : maxBatch)
+  const limit =
+    intent.fileNameHint && candidates.length <= 1
+      ? 1
+      : intent.limit ?? (intent.includeAllSummarizeable ? maxBatch : maxBatch)
   const capped = Math.min(Math.max(limit, 1), maxBatch)
   return {
     selected: candidates.slice(0, capped),
@@ -112,7 +130,7 @@ export async function runSummarizeBatch(
 export function formatSummarizeBatchForModel(result: SummarizeBatchResult): string {
   const parts: string[] = []
   for (const item of result.summaries) {
-    parts.push(`***REMOVED******REMOVED*** ${item.fileName} (${item.fileKind})\n${item.summary}`)
+    parts.push(`## ${item.fileName} (${item.fileKind})\n${item.summary}`)
   }
   if (result.errors.length > 0) {
     parts.push(
