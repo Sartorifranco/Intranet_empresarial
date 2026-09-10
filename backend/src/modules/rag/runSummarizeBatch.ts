@@ -1,5 +1,8 @@
 import type { AccessibleDriveFile } from './accessibleDriveInventory.js'
-import { loadAccessibleInventory } from './accessibleDriveInventory.js'
+import {
+  findAccessibleFileByName,
+  loadAccessibleInventory,
+} from './accessibleDriveInventory.js'
 import { isSummarizeableKind, type SummarizeIntent } from './assistantIntent.js'
 import type { RagToolContext } from './executeRagTool.js'
 import { summarizeDocument } from './summarizeDocument.js'
@@ -17,7 +20,7 @@ function selectFilesForSummarize(
   intent: SummarizeIntent,
   maxBatch = MAX_SUMMARIZE_BATCH,
 ): { selected: AccessibleDriveFile[]; skipped: AccessibleDriveFile[] } {
-  const nameHint = intent.fileNameHint?.trim().toLowerCase()
+  const nameHint = intent.fileNameHint?.trim()
   let candidates = files
     .filter((file) => isSummarizeableKind(file.fileKind))
     .filter((file) =>
@@ -25,26 +28,33 @@ function selectFilesForSummarize(
     )
 
   if (nameHint) {
-    const byName = candidates.filter((file) => file.name.toLowerCase().includes(nameHint))
-    if (byName.length > 0) {
-      candidates = byName
-    } else {
-      const hintBase = nameHint.replace(/\.(docx|doc|pdf|txt)$/i, '')
-      const fuzzy = candidates.filter((file) => file.name.toLowerCase().includes(hintBase))
-      if (fuzzy.length > 0) candidates = fuzzy
+    const inventoryStub = {
+      files: candidates,
+      folders: [],
+      areaLabel: '',
+      governingAreaId: '',
+      foldersVisited: 0,
+    }
+    const matches = findAccessibleFileByName(inventoryStub, nameHint)
+    if (matches.length === 0) {
+      return { selected: [], skipped: [] }
+    }
+    const queryLower = nameHint.toLowerCase()
+    const exact = matches.find((file) => file.name.toLowerCase() === queryLower)
+    const picked = exact ?? matches.sort((a, b) => a.name.length - b.name.length)[0]
+    return {
+      selected: picked ? [picked] : [],
+      skipped: matches.filter((file) => file.id !== picked?.id),
     }
   }
 
   candidates = candidates.sort((a, b) => {
-      const aTime = a.modifiedTime ? new Date(a.modifiedTime).getTime() : 0
-      const bTime = b.modifiedTime ? new Date(b.modifiedTime).getTime() : 0
-      return bTime - aTime
-    })
+    const aTime = a.modifiedTime ? new Date(a.modifiedTime).getTime() : 0
+    const bTime = b.modifiedTime ? new Date(b.modifiedTime).getTime() : 0
+    return bTime - aTime
+  })
 
-  const limit =
-    intent.fileNameHint && candidates.length <= 1
-      ? 1
-      : intent.limit ?? (intent.includeAllSummarizeable ? maxBatch : maxBatch)
+  const limit = intent.limit ?? (intent.includeAllSummarizeable ? maxBatch : maxBatch)
   const capped = Math.min(Math.max(limit, 1), maxBatch)
   return {
     selected: candidates.slice(0, capped),
@@ -67,6 +77,19 @@ export async function runSummarizeBatch(
   const { selected, skipped } = selectFilesForSummarize(inventory.files, intent, effectiveCap)
   const summaries: SummarizeBatchResult['summaries'] = []
   const errors: SummarizeBatchResult['errors'] = []
+
+  if (selected.length === 0 && intent.fileNameHint?.trim()) {
+    return {
+      summaries: [],
+      skipped: [],
+      errors: [
+        {
+          fileName: intent.fileNameHint.trim(),
+          message: `No encontré un archivo accesible que coincida con "${intent.fileNameHint.trim()}".`,
+        },
+      ],
+    }
+  }
 
   const settled = await Promise.all(
     selected.map(async (file) => {

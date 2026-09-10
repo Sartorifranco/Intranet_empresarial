@@ -17,9 +17,11 @@ export function formatSummariesAsAnswer(batch: SummarizeBatchResult): string {
   )
 
   const intro =
-    batch.skipped.length > 0
-      ? `Puedo resumir hasta **${MAX_SUMMARIZE_BATCH} documentos por mensaje**. Empiezo con estos ${batch.summaries.length}:\n\n`
-      : 'Acá van los resúmenes:\n\n'
+    batch.summaries.length === 1
+      ? ''
+      : batch.skipped.length > 0
+        ? `Puedo resumir hasta **${MAX_SUMMARIZE_BATCH} documentos por mensaje**. Empiezo con estos ${batch.summaries.length}:\n\n`
+        : 'Acá van los resúmenes:\n\n'
 
   const parts = [`${intro}${sections.join('\n\n')}`]
 

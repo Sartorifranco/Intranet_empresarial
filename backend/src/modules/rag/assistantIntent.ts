@@ -11,8 +11,34 @@ const PDF_RE = /\bpdf\b/i
 const WORD_RE = /\b(word|docx|documentos?\s+word)\b/i
 const ALL_FILES_RE = /\b(todos?\s*(los\s*)?(archivos?|documentos?)|todos?\s+los\s+pdf)\b/i
 const COUNT_RE = /\b(\d{1,2})\s*(pdf|archivos?|documentos?)\b/i
-const FILE_NAME_IN_QUESTION_RE =
-  /(?:^|[^\w.])([\w@.\s()-]{2,120}\.(?:docx|doc|pdf|txt))(?:\b|$)/i
+const FILE_EXTENSION_RE = /\.(docx|doc|pdf|txt)\b/i
+
+/** Nombre de archivo mencionado explícitamente (ej. "resumen de ATM.docx"). */
+export function extractFileNameHintFromQuestion(text: string): string | undefined {
+  const normalized = text.trim()
+  if (!normalized || !FILE_EXTENSION_RE.test(normalized)) return undefined
+
+  const patterns = [
+    /\b(?:archivo|documento)\s+["']([^"']+\.(?:docx|doc|pdf|txt))["']/i,
+    /\b(?:de|del)\s+([A-Za-z0-9][\w.-]*\.(?:docx|doc|pdf|txt))\b/i,
+    /\b([A-Za-z0-9][\w.-]*\.(?:docx|doc|pdf|txt))\b/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(normalized)
+    const raw = match?.[1]?.trim()
+    if (!raw) continue
+    const cleaned = raw
+      .replace(/^["']|["']$/g, '')
+      .replace(/^(?:de|del|el|la|archivo|documento)\s+/i, '')
+      .trim()
+    if (cleaned.length >= 4 && FILE_EXTENSION_RE.test(cleaned)) {
+      return cleaned
+    }
+  }
+
+  return undefined
+}
 const LIST_FILES_RE =
   /\b(qu[eé]\s+archivos|list(a|ar|ame)\s+(los\s+)?archivos|mi\s+carpeta|contenido\s+de\s+(la\s+)?carpeta|qu[eé]\s+tengo\s+en\s+(drive|archivos|sistemas|mi\s+carpeta))\b/i
 const EMAIL_PREP_RE =
@@ -187,13 +213,20 @@ export function analyzeQuestionIntent(
     if (fileKinds.length === 0) {
       fileKinds.push('PDF', 'Word', 'Texto', 'Documento Google')
     }
-    const fileNameMatch = FILE_NAME_IN_QUESTION_RE.exec(text)
-    const fileNameHint = fileNameMatch?.[1]?.trim().replace(/\s+/g, ' ')
+    const fileNameHint = extractFileNameHintFromQuestion(text)
+    const resolvedLimit =
+      fileNameHint !== undefined
+        ? 1
+        : limit && Number.isFinite(limit)
+          ? limit
+          : null
     summarize = {
-      limit: limit && Number.isFinite(limit) ? limit : null,
+      limit: resolvedLimit,
       fileKinds,
-      includeAllSummarizeable: ALL_FILES_RE.test(text) || (!limit && fileKinds.length > 0),
-      fileNameHint: fileNameHint && fileNameHint.length >= 5 ? fileNameHint : undefined,
+      includeAllSummarizeable: fileNameHint
+        ? false
+        : ALL_FILES_RE.test(text) || (!limit && fileKinds.length > 0),
+      fileNameHint,
     }
   }
 
