@@ -34,9 +34,14 @@ export async function listAccessibleFilesTool(input: {
     byType[file.fileKind].push(file)
   }
 
+  const folderNameById = new Map(inventory.folders.map((folder) => [folder.id, folder.name]))
+
   const listed = files.slice(0, limit).map((file) => ({
     fileName: file.name,
     fileKind: file.fileKind,
+    folderName: file.parentFolderId
+      ? (folderNameById.get(file.parentFolderId) ?? null)
+      : null,
     modifiedTime: file.modifiedTime,
     webViewLink: file.webViewLink,
   }))

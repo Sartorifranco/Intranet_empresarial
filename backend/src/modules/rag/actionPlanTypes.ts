@@ -6,6 +6,7 @@ export type BodySource =
   | { type: 'summaries' }
   | { type: 'previous_assistant' }
   | { type: 'literal'; text: string }
+  | { type: 'reuse_draft' }
 
 export type PlannedEmailAction = {
   kind: 'email'
@@ -57,8 +58,18 @@ export type ActionPlan = {
 export type ActionContext = {
   summariesText?: string
   previousAssistantText?: string
+  emailBodyFallback?: string
+  pendingEmailDraft?: {
+    to: string[]
+    cc: string[]
+    subject: string
+    body: string
+  }
   referenceDate: string
   calendarEventsCatalog?: CalendarEventCatalogEntry[]
+  /** Cuenta autenticada — organizador; no debe figurar como invitado. */
+  organizerEmail?: string
+  contactsDirectoryText?: string
 }
 
 export type PreparationSuccess = {

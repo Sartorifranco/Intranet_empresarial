@@ -25,12 +25,17 @@ const CALENDAR_CANCEL_TARGET_RE =
 /** "Cancelá todo", "eliminar todos", etc. — típico tras listar la agenda. */
 const CALENDAR_CANCEL_ALL_RE =
   /(?:^|[^\p{L}])(?:todo|todos|todas)(?=[^\p{L}]|$)/iu
+/** "Cancelá los 2", "borrá ambas", etc. */
+const CALENDAR_CANCEL_COUNT_RE =
+  /(?:^|[^\p{L}])(?:los|las)?\s*(?:\d+|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|ambos|ambas|par)(?=[^\p{L}]|$)/iu
 const GMAIL_INBOX_TODAY_RE =
   /\b(qu[eé]\s+correos?\s+(tengo|recib[ií]|llegaron)|correos?\s+(de\s+)?hoy|mails?\s+(de\s+)?hoy|bandeja\s+(de\s+entrada\s+)?(de\s+)?hoy|inbox\s+(de\s+)?hoy)\b/i
 const EMAIL_BODY_FROM_HISTORY_RE =
   /\b(respuesta\s+anterior|mensaje\s+anterior|lo\s+de\s+rec[ií]en|tu\s+(respuesta|mensaje)\s+(anterior|previo)|cuerpo\s+el\s+resumen\s+de\s+tu|contenido\s+de\s+tu\s+(respuesta|mensaje))/i
 const EXPLICIT_DOCUMENT_SUMMARIZE_RE =
   /\b(resum(e|ir|o|ame|á|ar)\s+(los|todos|mis|estos|todas?|\d+\s*(pdf|archivos?|documentos?)))/i
+const CALENDAR_CONTEXT_IN_ASSISTANT_RE =
+  /\bevento\(s\)\s+en\s+tu\s+agenda\b|Ten[eé]s\s+\*\*\d+\*\*\s+evento|Acci[oó]n\s+confirmada|confirmad[oa]\s+y\s+ejecutad|creado\s+en\s+tu\s+calendario|cancelado\s+en\s+tu\s+calendario/i
 
 export type SummarizeIntent = {
   limit: number | null
@@ -71,12 +76,33 @@ export function isCalendarCreateQuery(text: string): boolean {
   return CALENDAR_CREATE_RE.test(text.trim())
 }
 
-export function isCalendarCancelQuery(text: string): boolean {
+function hasRecentCalendarContext(
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+): boolean {
+  return history.slice(-8).some((turn) => {
+    if (turn.role === 'assistant') {
+      return CALENDAR_CONTEXT_IN_ASSISTANT_RE.test(turn.content)
+    }
+    return isCalendarReadQuery(turn.content) || CALENDAR_CREATE_RE.test(turn.content)
+  })
+}
+
+export function isCalendarCancelQuery(
+  text: string,
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+): boolean {
   const normalized = text.trim()
   if (!normalized) return false
   if (CALENDAR_CREATE_RE.test(normalized)) return false
   if (!CALENDAR_CANCEL_VERB_RE.test(normalized)) return false
-  return CALENDAR_CANCEL_TARGET_RE.test(normalized) || CALENDAR_CANCEL_ALL_RE.test(normalized)
+
+  if (CALENDAR_CANCEL_TARGET_RE.test(normalized)) return true
+  if (CALENDAR_CANCEL_ALL_RE.test(normalized)) return true
+  if (CALENDAR_CANCEL_COUNT_RE.test(normalized)) return true
+
+  if (hasRecentCalendarContext(history)) return true
+
+  return false
 }
 
 export function isCalendarCancelAllQuery(text: string): boolean {
@@ -91,7 +117,7 @@ export function inferCalendarCancelRange(
   referenceDate = todayInTimeZone(),
 ): CalendarReadRange {
   const fromQuestion = parseCalendarReadRange(question, referenceDate)
-  if (!isCalendarCancelAllQuery(question)) {
+  if (!isCalendarCancelAllQuery(question) && !CALENDAR_CANCEL_COUNT_RE.test(question.trim())) {
     return fromQuestion
   }
 
@@ -118,10 +144,13 @@ export function inferCalendarCancelRange(
   return fromQuestion
 }
 
-export function analyzeQuestionIntent(question: string): QuestionIntent {
+export function analyzeQuestionIntent(
+  question: string,
+  history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
+): QuestionIntent {
   const text = question.trim()
   const wantsCalendar = CALENDAR_CREATE_RE.test(text)
-  const wantsCalendarCancel = !wantsCalendar && isCalendarCancelQuery(text)
+  const wantsCalendarCancel = !wantsCalendar && isCalendarCancelQuery(text, history)
   const wantsCalendarRead = !wantsCalendar && !wantsCalendarCancel && CALENDAR_READ_RE.test(text)
   const wantsEmail = EMAIL_PREP_RE.test(text)
   const wantsEmailFromHistory =

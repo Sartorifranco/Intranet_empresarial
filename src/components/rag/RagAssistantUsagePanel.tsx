@@ -48,7 +48,7 @@ export function RagAssistantUsagePanel() {
 
   if (!stats) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+      <div className="surface-card p-4 text-sm text-body-muted">
         No hay datos de consumo disponibles.
       </div>
     )
@@ -56,13 +56,13 @@ export function RagAssistantUsagePanel() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+      <div className="rounded-xl border border-amber-300/80 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-700/50 dark:bg-amber-950/35 dark:text-amber-50">
         <div className="flex gap-2">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
           <div className="space-y-1">
             <p className="font-medium">Estimación interna — no es la factura de Google Cloud</p>
-            <p>{stats.disclaimer}</p>
-            <p className="text-xs text-amber-900/80">
+            <p className="leading-relaxed text-amber-900 dark:text-amber-100/90">{stats.disclaimer}</p>
+            <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200/80">
               Modelo: {stats.pricing.geminiModel} · Embeddings: {stats.pricing.embeddingModel}. Tarifas
               orientativas: entrada Gemini ${stats.pricing.geminiInputUsdPer1M}/1M tokens, salida $
               {stats.pricing.geminiOutputUsdPer1M}/1M, embeddings $
@@ -171,15 +171,32 @@ export function RagAssistantUsagePanel() {
       <section className="surface-card p-4 shadow-sm">
         <h2 className="mb-3 font-medium text-heading">Últimos 14 días</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-          {stats.volume.last14Days.map((day) => (
-            <div
-              key={day.date}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-center"
-            >
-              <p className="text-[10px] text-body-muted">{day.date.slice(5)}</p>
-              <p className="text-lg font-semibold text-heading">{day.questions}</p>
-            </div>
-          ))}
+          {stats.volume.last14Days.map((day) => {
+            const hasActivity = day.questions > 0
+            return (
+              <div
+                key={day.date}
+                className={`rounded-lg border px-2 py-2 text-center ${
+                  hasActivity
+                    ? 'border-brand-primary/25 bg-brand-primary/5 dark:border-brand-primary/35 dark:bg-brand-primary/15'
+                    : 'border-neutral-200 bg-neutral-100 dark:border-zinc-700 dark:bg-zinc-800/80'
+                }`}
+              >
+                <p className="text-[10px] font-medium text-neutral-600 dark:text-gray-400">
+                  {day.date.slice(5)}
+                </p>
+                <p
+                  className={`text-lg font-semibold tabular-nums ${
+                    hasActivity
+                      ? 'text-neutral-900 dark:text-gray-100'
+                      : 'text-neutral-500 dark:text-gray-400'
+                  }`}
+                >
+                  {day.questions}
+                </p>
+              </div>
+            )
+          })}
         </div>
       </section>
 

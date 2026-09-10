@@ -2,6 +2,7 @@ import { parseCalendarFromNaturalLanguage } from '../assistant-actions/parseCale
 import { prepareCalendarDraftTool } from '../assistant-actions/prepareCalendarDraft.js'
 import { prepareEmailDraftTool } from '../assistant-actions/prepareEmailDraft.js'
 import { analyzeQuestionIntent, type QuestionIntent } from './assistantIntent.js'
+import { isEmailDraftFollowUpQuestion } from './emailDraftFromHistory.js'
 import type { RagToolContext } from './executeRagTool.js'
 import type { RagConversationTurn } from './runRagAssistant.js'
 
@@ -211,7 +212,10 @@ export function inferIntentFromConversation(
   question: string,
   history: RagConversationTurn[],
 ): QuestionIntent {
-  const direct = analyzeQuestionIntent(question)
+  const direct = analyzeQuestionIntent(question, history)
+  if (isEmailDraftFollowUpQuestion(question)) {
+    return { ...direct, wantsEmail: true, wantsSummarize: false }
+  }
   if (
     direct.wantsSummarize ||
     direct.wantsEmail ||
@@ -236,5 +240,5 @@ export function inferIntentFromConversation(
     .join('\n')
 
   if (!recentUserText.trim()) return direct
-  return analyzeQuestionIntent(`${recentUserText}\n${question}`)
+  return analyzeQuestionIntent(`${recentUserText}\n${question}`, history)
 }

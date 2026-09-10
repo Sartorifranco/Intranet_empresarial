@@ -439,6 +439,16 @@ export async function runRagAssistant(input: {
     }
   }
 
+  if (intent.wantsCalendarCancel) {
+    return withUsage({
+      answer:
+        'No pude preparar las cancelaciones en este turno. Pedime que liste tus eventos (por ejemplo "¿qué tengo mañana?") y después indicá cuáles cancelar.',
+      citations,
+      toolsUsed,
+      pendingActions,
+    })
+  }
+
   try {
     const loop = await runGeminiAssistantLoop({
       question: questionForModel,

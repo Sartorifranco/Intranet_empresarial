@@ -1014,7 +1014,7 @@ export function AdminDriveLab() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={`Buscar en ${currentFolder.name}`}
-              className="h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-11 pr-4 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 dark:focus:border-brand-primary"
+              className="h-11 w-full rounded-lg border border-neutral-200 bg-white pl-11 pr-4 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-brand-primary"
             />
           </label>
         </div>

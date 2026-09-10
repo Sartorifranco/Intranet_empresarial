@@ -9,6 +9,20 @@ const markdownComponents: Components = {
   ul: ({ children }) => <ul className="my-2 list-disc space-y-1 pl-5">{children}</ul>,
   ol: ({ children }) => <ol className="my-2 list-decimal space-y-1 pl-5">{children}</ol>,
   li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  table: ({ children }) => (
+    <div className="my-2 overflow-x-auto">
+      <table className="min-w-full border-collapse text-xs">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-neutral-100 dark:bg-zinc-800">{children}</thead>,
+  th: ({ children }) => (
+    <th className="border border-neutral-200 px-2 py-1 text-left font-semibold text-heading dark:border-zinc-700">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="border border-neutral-200 px-2 py-1 align-top dark:border-zinc-700">{children}</td>
+  ),
   a: ({ href, children }) => (
     <a
       href={href}

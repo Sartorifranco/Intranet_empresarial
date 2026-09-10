@@ -157,9 +157,48 @@ export const RAG_METADATA_TOOL_DECLARATIONS: GeminiFunctionDeclaration[] = [
     },
   },
   {
+    name: 'list_accessible_folders',
+    description:
+      'Lista las carpetas de Drive a las que el usuario tiene acceso, con nombre y cantidad de archivos directos en cada una. ' +
+      'Usala cuando pregunten por carpetas, estructura de directorios o "¿qué carpetas tengo?".',
+    parameters: {
+      type: 'object',
+      properties: {
+        areaLabel: {
+          type: 'string',
+          description: 'Nombre del área. Omitir para usar las áreas habilitadas para el usuario.',
+        },
+      },
+    },
+  },
+  {
+    name: 'list_folder_contents',
+    description:
+      'Lista los archivos dentro de una carpeta específica (nombre, tipo, fecha de modificación). ' +
+      'Requiere folderName. Para resúmenes del contenido, combiná con summarize_document.',
+    parameters: {
+      type: 'object',
+      properties: {
+        folderName: {
+          type: 'string',
+          description: 'Nombre de la carpeta (completo o parcial si es único).',
+        },
+        limit: {
+          type: 'number',
+          description: 'Cantidad máxima de archivos (default 100, máx 200).',
+        },
+        areaLabel: {
+          type: 'string',
+          description: 'Nombre del área. Omitir para usar las áreas habilitadas para el usuario.',
+        },
+      },
+      required: ['folderName'],
+    },
+  },
+  {
     name: 'get_inventory_summary',
     description:
-      'Resume el inventario de metadata: carpetas visitadas, archivos por tipo, espacio total y archivo más reciente. ' +
+      'Resume el inventario de metadata: carpetas visitadas, nombres de carpetas con archivos, archivos por tipo, espacio total y archivo más reciente. ' +
       'No resume el contenido textual de los documentos.',
     parameters: {
       type: 'object',
@@ -269,6 +308,41 @@ export const RAG_ACTION_TOOL_DECLARATIONS: GeminiFunctionDeclaration[] = [
         },
       },
       required: ['title', 'startDateTime', 'endDateTime'],
+    },
+  },
+  {
+    name: 'prepare_calendar_cancel',
+    description:
+      'Prepara la cancelación de UN evento del calendario del usuario para revisión y confirmación explícita. ' +
+      'NO cancela el evento hasta que el usuario confirme en la interfaz. ' +
+      'Primero listá eventos con list_calendar_events para obtener eventId, título, fechas e invitados. ' +
+      'Para cancelar varios eventos ("cancelá todo"), llamá esta herramienta una vez por cada evento.',
+    parameters: {
+      type: 'object',
+      properties: {
+        eventId: {
+          type: 'string',
+          description: 'ID del evento en Google Calendar (devuelto por list_calendar_events).',
+        },
+        title: {
+          type: 'string',
+          description: 'Título del evento a cancelar.',
+        },
+        startDateTime: {
+          type: 'string',
+          description: 'Inicio del evento en ISO 8601.',
+        },
+        endDateTime: {
+          type: 'string',
+          description: 'Fin del evento en ISO 8601.',
+        },
+        attendees: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Invitados del evento (emails).',
+        },
+      },
+      required: ['eventId', 'title', 'startDateTime', 'endDateTime'],
     },
   },
 ]

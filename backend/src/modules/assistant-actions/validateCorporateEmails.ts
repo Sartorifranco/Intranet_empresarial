@@ -29,6 +29,23 @@ export function listExternalAttendees(attendees: string[]): string[] {
   return attendees.filter((email) => !isCorporateEmail(email))
 }
 
+/** Quita al organizador de la lista de invitados (no auto-invitarse). */
+export function filterOrganizerFromAttendees(
+  attendees: string[],
+  organizerEmail: string,
+): string[] {
+  const organizer = normalizeCorporateEmail(organizerEmail)
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const raw of attendees) {
+    const email = normalizeCorporateEmail(raw)
+    if (email === organizer || seen.has(email)) continue
+    seen.add(email)
+    out.push(email)
+  }
+  return out
+}
+
 export function assertEmail(raw: string, fieldLabel: string): string {
   const email = normalizeCorporateEmail(raw)
   if (!EMAIL_RE.test(email)) {

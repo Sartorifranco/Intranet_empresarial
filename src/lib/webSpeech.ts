@@ -16,6 +16,8 @@ type WindowWithSpeech = Window & {
   webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor
 }
 
+export const DEFAULT_SPEECH_SILENCE_MS = 2500
+
 export function isSpeechRecognitionSupported(): boolean {
   if (typeof window === 'undefined') return false
   const speechWindow = window as WindowWithSpeech
@@ -75,14 +77,22 @@ export function stopSpeaking(): void {
   }
 }
 
+export type SpeechRecognitionStartOptions = {
+  /** Milisegundos de silencio antes de cortar (default 2500). 0 = sin corte automático. */
+  silenceMs?: number
+}
+
 export type SpeechRecognitionController = {
-  start: () => void
+  start: (options?: SpeechRecognitionStartOptions) => void
   stop: () => void
+  isActive: () => boolean
 }
 
 export function createSpeechRecognitionHandlers(input: {
   onTranscript: (text: string, isFinal: boolean) => void
   onListeningChange: (listening: boolean) => void
+  /** Se dispara cuando el dictado se detiene por silencio prolongado (no por stop manual). */
+  onSilenceStop?: () => void
 }): SpeechRecognitionController | null {
   const Ctor = getSpeechRecognitionCtor()
   if (!Ctor) return null
@@ -90,33 +100,92 @@ export function createSpeechRecognitionHandlers(input: {
   const recognition = new Ctor()
   recognition.lang = 'es-AR'
   recognition.interimResults = true
-  recognition.continuous = false
+  recognition.continuous = true
+
+  let active = false
+  let manualStop = false
+  let stoppedBySilence = false
+  let currentSilenceMs = DEFAULT_SPEECH_SILENCE_MS
+  let silenceTimer: ReturnType<typeof setTimeout> | null = null
+
+  function clearSilenceTimer() {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer)
+      silenceTimer = null
+    }
+  }
+
+  function scheduleSilenceStop() {
+    clearSilenceTimer()
+    if (currentSilenceMs <= 0 || !active) return
+    silenceTimer = setTimeout(() => {
+      stoppedBySilence = true
+      manualStop = true
+      active = false
+      recognition.stop()
+    }, currentSilenceMs)
+  }
 
   recognition.onresult = (event: SpeechRecognitionEvent) => {
     let text = ''
-    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+    for (let index = 0; index < event.results.length; index += 1) {
       text += event.results[index][0]?.transcript ?? ''
     }
     const isFinal = event.results[event.results.length - 1]?.isFinal ?? false
     input.onTranscript(text.trim(), isFinal)
+    scheduleSilenceStop()
   }
 
   recognition.onerror = () => {
+    clearSilenceTimer()
+    active = false
+    manualStop = true
     input.onListeningChange(false)
   }
 
   recognition.onend = () => {
+    clearSilenceTimer()
+    if (active && !manualStop) {
+      try {
+        recognition.start()
+        scheduleSilenceStop()
+      } catch {
+        active = false
+        input.onListeningChange(false)
+      }
+      return
+    }
+
+    const wasSilence = stoppedBySilence
+    active = false
+    stoppedBySilence = false
     input.onListeningChange(false)
+    if (wasSilence) {
+      input.onSilenceStop?.()
+    }
   }
 
   return {
-    start: () => {
+    start: (options?: SpeechRecognitionStartOptions) => {
+      manualStop = false
+      stoppedBySilence = false
+      active = true
+      currentSilenceMs = options?.silenceMs ?? DEFAULT_SPEECH_SILENCE_MS
       input.onListeningChange(true)
-      recognition.start()
+      try {
+        recognition.start()
+        scheduleSilenceStop()
+      } catch {
+        active = false
+        input.onListeningChange(false)
+      }
     },
     stop: () => {
+      manualStop = true
+      active = false
+      clearSilenceTimer()
       recognition.stop()
-      input.onListeningChange(false)
     },
+    isActive: () => active,
   }
 }

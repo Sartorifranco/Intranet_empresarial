@@ -32,6 +32,9 @@ import { summarizeDocument } from './summarizeDocument.js'
 import { listAccessibleFilesTool } from './listAccessibleFiles.js'
 import { prepareEmailDraftTool } from '../assistant-actions/prepareEmailDraft.js'
 import { prepareCalendarDraftTool } from '../assistant-actions/prepareCalendarDraft.js'
+import { prepareCalendarCancelDraftTool } from '../assistant-actions/prepareCalendarCancelDraft.js'
+import { listAccessibleFoldersTool } from './listAccessibleFolders.js'
+import { listFolderContentsTool } from './listFolderContents.js'
 import {
   findCalendarFreeSlotsTool,
   listCalendarEventsTool,
@@ -425,6 +428,11 @@ export async function executeRagTool(
       response = {
         areaLabel: inventory.areaLabel,
         foldersVisited: inventory.foldersVisited,
+        totalFolders: inventory.folders.length,
+        folders: inventory.folders.map((folder) => ({
+          name: folder.name,
+          directFileCount: folder.directFileCount,
+        })),
         totalFiles: inventory.files.length,
         totalBytes,
         totalFormatted: formatBytes(totalBytes),
@@ -438,8 +446,30 @@ export async function executeRagTool(
             }
           : null,
         note:
-          'Resumen de inventario (metadata). No incluye síntesis del contenido textual de los documentos.',
+          'Resumen de inventario (metadata). Para ver archivos de una carpeta usá list_folder_contents. No incluye síntesis del contenido textual.',
       }
+      break
+    }
+
+    case 'list_accessible_folders': {
+      const areaLabel = typeof args.areaLabel === 'string' ? args.areaLabel : undefined
+      const scope = assertPilotAreaLabel(areaLabel, ctx)
+      if (!scope.ok) {
+        response = scope.response
+        break
+      }
+      response = await listAccessibleFoldersTool(ctx)
+      break
+    }
+
+    case 'list_folder_contents': {
+      const areaLabel = typeof args.areaLabel === 'string' ? args.areaLabel : undefined
+      const scope = assertPilotAreaLabel(areaLabel, ctx)
+      if (!scope.ok) {
+        response = scope.response
+        break
+      }
+      response = await listFolderContentsTool(ctx, args)
       break
     }
 
@@ -512,6 +542,33 @@ export async function executeRagTool(
         ctx.pendingActions.push({
           id: response.pendingActionId,
           type: 'calendar_event',
+          status: 'pending',
+          preview: response.preview as AssistantPendingActionDto['preview'],
+          expiresAt:
+            typeof response.expiresAt === 'string'
+              ? response.expiresAt
+              : new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        })
+      }
+      break
+    }
+
+    case 'prepare_calendar_cancel': {
+      response = await prepareCalendarCancelDraftTool({
+        userId: ctx.userId,
+        userEmail: ctx.userEmail,
+        impersonateAs: ctx.searchSubject,
+        args,
+      })
+      if (
+        response.requiresConfirmation === true &&
+        typeof response.pendingActionId === 'string' &&
+        response.preview &&
+        typeof response.preview === 'object'
+      ) {
+        ctx.pendingActions.push({
+          id: response.pendingActionId,
+          type: 'calendar_cancel',
           status: 'pending',
           preview: response.preview as AssistantPendingActionDto['preview'],
           expiresAt:
@@ -603,22 +660,31 @@ export function buildAssistantSystemInstruction(input: {
     '- Consultar inventario y metadata: conteos por tipo, espacio, fechas, uploader, resumen.\n' +
     '- Leer Gmail: list_inbox_today, search_emails, summarize_email.\n' +
     '- Consultar calendario: list_calendar_events, find_calendar_free_slots.\n' +
-    '- Preparar borradores de correo (prepare_email_draft) o eventos (prepare_calendar_event).\n' +
+    '- Preparar borradores de correo (prepare_email_draft), eventos (prepare_calendar_event) o cancelaciones (prepare_calendar_cancel).\n' +
+    '- Listar carpetas (list_accessible_folders) y contenido por carpeta (list_folder_contents).\n' +
     (isSuperAdmin
       ? '- Consultar auditoría interna (query_audit_logs): aprobaciones, permisos, cambios.\n'
       : '') +
     'IMPORTANTE — acciones reales:\n' +
     '- NUNCA afirmes que enviaste un correo o creaste un evento sin haber llamado prepare_* y sin confirmación explícita del usuario en la interfaz.\n' +
     '- Para correos: usá prepare_email_draft. Podés reutilizar resúmenes o respuestas previas del chat como cuerpo del mail si el usuario lo pide.\n' +
-    '- Para eventos: usá prepare_calendar_event con fechas ISO completas. Si el usuario menciona invitados, incluilos en attendees (cualquier email válido). Si pide Meet/videollamada, pasá addGoogleMeet: true.\n' +
-    '- Correos: destinatarios solo @bacarsa.com.ar. Calendario: invitados de cualquier dominio.\n' +
+    '- Para eventos: usá prepare_calendar_event con fechas ISO completas. Invitados: cualquier email válido (incluidos externos fuera de @bacarsa.com.ar). Si hay invitados externos, mencioná que recibirán invitación al confirmar. Si pide Meet/videollamada, pasá addGoogleMeet: true.\n' +
+    '- Para cancelar eventos: primero list_calendar_events, luego prepare_calendar_cancel (una llamada por evento). Si piden "cancelá todo", prepará una cancelación por cada evento listado; el usuario confirma cada una en la interfaz.\n' +
+    '- Correos: destinatarios @bacarsa.com.ar; si el usuario dice un nombre, buscá el email en el directorio de contactos de la intranet antes de pedir el email.\n' +
+    '- Si hay un borrador de correo pendiente en el hilo y piden agregar alguien, prepará un nuevo borrador con los mismos destinatarios + el nuevo y el mismo cuerpo.\n' +
+    'Calendario: invitados de cualquier dominio.\n' +
     '- Calendario/correo: SIEMPRE es del usuario autenticado. Nunca consultes ni actúes sobre el calendario/correo de otra persona.\n' +
     '- Para leer la bandeja: list_inbox_today (correos de hoy), search_emails (por remitente/asunto), summarize_email (resumen de un correo puntual).\n' +
     'Usá el historial de la conversación para entender referencias como "ese archivo", "el anterior", "mandale el resumen de recién" o "¿tengo algo mañana?".\n' +
+    'Si en el historial aparece "Acción confirmada y ejecutada", "creado en tu calendario", "cancelado en tu calendario" o líneas que empiezan con ✅, el usuario YA confirmó esa acción en la interfaz — respondé afirmativamente con esos datos; no digas que no podés confirmar ni que no sabés.\n' +
+    'NUNCA digas que no podés cancelar eventos: usá list_calendar_events y prepare_calendar_cancel (una por evento).\n' +
     (userFrustrated
       ? 'El usuario ya expresó frustración por preguntas de aclaración repetidas: NO vuelvas a pedir qué archivos resumir. Procedé con PDF y Word (excluyendo comprimidos, imágenes y ejecutables) usando lo que ya listaste o el contexto interno.\n'
       : '') +
-    'Para "¿qué archivos tengo?" / "mi carpeta": usá list_accessible_files (NO get_inventory_summary ni solo conteos).\n' +
+    'Para "¿qué archivos tengo?" / "mi carpeta": usá list_accessible_files o list_accessible_folders + list_folder_contents.\n' +
+    'Para inventario con nombres de carpetas: list_accessible_folders o get_inventory_summary (incluye nombres y conteos).\n' +
+    'Para listar contenido de una carpeta y resumir archivos: list_folder_contents + summarize_document por archivo.\n' +
+    'Presentá listados en markdown (tablas o listas) de forma clara: carpeta → archivos → resumen breve.\n' +
     'Para resumir varios archivos: si hay contexto interno con resúmenes ya generados, usalo directamente.\n' +
     'Si no hay contexto interno, usá summarize_document por cada archivo identificado con list_accessible_files.\n' +
     'NUNCA digas que no podés resumir PDFs completos si summarize_document está disponible o si ya hay resúmenes en contexto.\n' +

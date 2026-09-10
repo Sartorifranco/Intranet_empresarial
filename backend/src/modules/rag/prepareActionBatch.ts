@@ -21,16 +21,33 @@ import {
 } from './actionPlanTypes.js'
 import type { RagToolContext } from './executeRagTool.js'
 
+function pickEmailBody(context: ActionContext, ...preferred: Array<string | undefined>): string {
+  const candidates = [
+    ...preferred,
+    context.pendingEmailDraft?.body,
+    context.emailBodyFallback,
+    context.summariesText,
+    context.previousAssistantText,
+  ]
+  for (const candidate of candidates) {
+    const trimmed = candidate?.trim() ?? ''
+    if (trimmed.length >= 10) return trimmed.slice(0, 9500)
+  }
+  return ''
+}
+
 function resolveBody(source: BodySource, context: ActionContext): string {
   switch (source.type) {
     case 'summaries':
-      return (context.summariesText ?? '').slice(0, 9500)
+      return pickEmailBody(context, context.summariesText)
     case 'previous_assistant':
-      return (context.previousAssistantText ?? '').slice(0, 9500)
+      return pickEmailBody(context, context.previousAssistantText)
+    case 'reuse_draft':
+      return pickEmailBody(context, context.pendingEmailDraft?.body)
     case 'literal':
-      return source.text.slice(0, 9500)
+      return pickEmailBody(context, source.text)
     default:
-      return ''
+      return pickEmailBody(context)
   }
 }
 

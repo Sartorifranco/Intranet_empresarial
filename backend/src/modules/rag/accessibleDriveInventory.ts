@@ -5,7 +5,7 @@ import { resolveFileGoverningAreaId } from '../drive/governDriveFile.js'
 import { isExcludedGoverningArea } from './regulatoryArea.js'
 import { mimeToKind } from './mimeKind.js'
 import type { RagConfig } from './types.js'
-import { walkDriveFolder, type DriveWalkFile } from './walkDriveFolder.js'
+import { walkDriveFolder, type DriveWalkFile, type DriveWalkFolder } from './walkDriveFolder.js'
 
 export type AccessibleDriveFile = DriveWalkFile & {
   fileKind: string
@@ -13,10 +13,18 @@ export type AccessibleDriveFile = DriveWalkFile & {
   uploaderEmail: string | null
 }
 
+export type AccessibleFolder = {
+  id: string
+  name: string
+  parentFolderId: string | null
+  directFileCount: number
+}
+
 export type AccessibleInventory = {
   areaLabel: string
   governingAreaId: string
   foldersVisited: number
+  folders: AccessibleFolder[]
   files: AccessibleDriveFile[]
 }
 
@@ -104,6 +112,50 @@ async function filterAccessibleFiles(
   return accessible
 }
 
+function buildAccessibleFolders(
+  allFolders: DriveWalkFolder[],
+  accessibleFiles: AccessibleDriveFile[],
+): AccessibleFolder[] {
+  const fileCountByFolder = new Map<string, number>()
+  const accessibleFolderIds = new Set<string>()
+
+  for (const file of accessibleFiles) {
+    if (!file.parentFolderId) continue
+    accessibleFolderIds.add(file.parentFolderId)
+    fileCountByFolder.set(
+      file.parentFolderId,
+      (fileCountByFolder.get(file.parentFolderId) ?? 0) + 1,
+    )
+  }
+
+  return allFolders
+    .filter((folder) => accessibleFolderIds.has(folder.id))
+    .map((folder) => ({
+      id: folder.id,
+      name: folder.name,
+      parentFolderId: folder.parentFolderId,
+      directFileCount: fileCountByFolder.get(folder.id) ?? 0,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+}
+
+export function findAccessibleFolder(
+  inventory: AccessibleInventory,
+  query: string,
+): AccessibleFolder | null {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return null
+
+  const exact = inventory.folders.find((folder) => folder.name.toLowerCase() === normalized)
+  if (exact) return exact
+
+  const partial = inventory.folders.filter((folder) =>
+    folder.name.toLowerCase().includes(normalized),
+  )
+  if (partial.length === 1) return partial[0] ?? null
+  return null
+}
+
 export async function loadAccessibleInventory(input: {
   drive: drive_v3.Drive
   config: RagConfig
@@ -116,16 +168,18 @@ export async function loadAccessibleInventory(input: {
     return cached.inventory
   }
 
-  const { files, foldersVisited } = await walkDriveFolder(
+  const { files, folders, foldersVisited } = await walkDriveFolder(
     input.drive,
     input.config.pilot.driveFolderId,
   )
   const accessibleFiles = await filterAccessibleFiles(input.drive, files, input.config)
+  const accessibleFolders = buildAccessibleFolders(folders, accessibleFiles)
 
   const inventory: AccessibleInventory = {
     areaLabel: input.config.pilot.label,
     governingAreaId: input.config.pilot.governingAreaId,
     foldersVisited,
+    folders: accessibleFolders,
     files: accessibleFiles,
   }
 

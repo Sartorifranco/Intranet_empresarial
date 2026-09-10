@@ -1,13 +1,16 @@
 import { Loader2, Mic, MicOff, ThumbsDown, ThumbsUp, Volume2, VolumeX } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   createSpeechRecognitionHandlers,
+  DEFAULT_SPEECH_SILENCE_MS,
   isSpeechRecognitionSupported,
   plainTextForSpeech,
   speakSpanishText,
   stopSpeaking,
 } from '../../lib/webSpeech'
 import { submitAssistantInteractionFeedback, type AssistantUserFeedback } from '../../services/ragApi'
+
+const HOLD_THRESHOLD_MS = 250
 
 type RagAssistantMessageFeedbackProps = {
   interactionId: string
@@ -115,17 +118,23 @@ type RagAssistantMicButtonProps = {
   question: string
   onQuestionChange: (value: string) => void
   disabled?: boolean
+  /** Modo push-to-talk: al soltar el botón envía el mensaje si hay texto suficiente. */
+  onPushToTalkSubmit?: () => void
 }
 
 export function RagAssistantMicButton({
   question,
   onQuestionChange,
   disabled = false,
+  onPushToTalkSubmit,
 }: RagAssistantMicButtonProps) {
   const [supported] = useState(() => isSpeechRecognitionSupported())
   const [listening, setListening] = useState(false)
   const controllerRef = useRef<ReturnType<typeof createSpeechRecognitionHandlers> | null>(null)
   const prefixRef = useRef('')
+  const pushToTalkRef = useRef(false)
+  const holdTimerRef = useRef<number | null>(null)
+  const pointerDownRef = useRef(false)
 
   useEffect(() => {
     if (!isSpeechRecognitionSupported()) return undefined
@@ -137,6 +146,11 @@ export function RagAssistantMicButton({
         onQuestionChange(prefix ? `${prefix} ${text}`.trim() : text)
       },
       onListeningChange: setListening,
+      onSilenceStop: () => {
+        if (!pushToTalkRef.current) {
+          // Modo toggle: silencio prolongado detiene; el texto queda en el input.
+        }
+      },
     })
 
     return () => {
@@ -144,26 +158,101 @@ export function RagAssistantMicButton({
     }
   }, [onQuestionChange])
 
-  const handleToggle = useCallback(() => {
-    if (!controllerRef.current) return
-    if (listening) {
-      controllerRef.current.stop()
+  const stopListening = useCallback(() => {
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+    controllerRef.current?.stop()
+  }, [])
+
+  const startListening = useCallback((silenceMs: number) => {
+    prefixRef.current = question
+    controllerRef.current?.start({ silenceMs })
+  }, [question])
+
+  const handlePointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>) => {
+      if (disabled || !controllerRef.current) return
+      event.preventDefault()
+      pointerDownRef.current = true
+      pushToTalkRef.current = false
+
+      if (listening) {
+        return
+      }
+
+      holdTimerRef.current = window.setTimeout(() => {
+        pushToTalkRef.current = true
+        startListening(0)
+      }, HOLD_THRESHOLD_MS)
+    },
+    [disabled, listening, startListening],
+  )
+
+  const handlePointerUp = useCallback(() => {
+    if (!pointerDownRef.current) return
+    pointerDownRef.current = false
+
+    if (holdTimerRef.current) {
+      window.clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+
+    if (pushToTalkRef.current) {
+      pushToTalkRef.current = false
+      stopListening()
+      window.setTimeout(() => {
+        onPushToTalkSubmit?.()
+      }, 80)
       return
     }
-    prefixRef.current = question
-    controllerRef.current.start()
-  }, [listening, question])
+
+    if (listening) {
+      stopListening()
+      return
+    }
+
+    startListening(DEFAULT_SPEECH_SILENCE_MS)
+  }, [listening, onPushToTalkSubmit, startListening, stopListening])
+
+  const handlePointerLeave = useCallback(() => {
+    if (!pointerDownRef.current) return
+    if (pushToTalkRef.current) {
+      pointerDownRef.current = false
+      pushToTalkRef.current = false
+      stopListening()
+      window.setTimeout(() => {
+        onPushToTalkSubmit?.()
+      }, 80)
+    }
+  }, [onPushToTalkSubmit, stopListening])
 
   if (!supported) return null
 
   return (
     <button
       type="button"
-      onClick={handleToggle}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+      onPointerCancel={handlePointerUp}
       disabled={disabled}
-      aria-label={listening ? 'Detener dictado' : 'Dictar pregunta'}
-      title={listening ? 'Detener dictado' : 'Dictar pregunta'}
-      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-50 ${
+      aria-label={
+        listening
+          ? pushToTalkRef.current
+            ? 'Soltá para enviar'
+            : 'Detener dictado'
+          : 'Dictar pregunta (clic o mantener presionado)'
+      }
+      title={
+        listening
+          ? pushToTalkRef.current
+            ? 'Soltá para enviar'
+            : 'Clic para detener · silencio ~2,5 s también detiene'
+          : 'Clic: dictar y revisar · Mantener: enviar al soltar'
+      }
+      className={`inline-flex h-11 w-11 shrink-0 touch-none select-none items-center justify-center rounded-xl transition-colors disabled:opacity-50 ${
         listening
           ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
           : 'border border-neutral-200 text-neutral-600 hover:bg-neutral-50 dark:border-zinc-700 dark:text-gray-300 dark:hover:bg-zinc-800'

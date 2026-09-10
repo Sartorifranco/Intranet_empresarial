@@ -5,8 +5,8 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useRagAssistant } from '../../context/RagAssistantContext'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useRagAssistant, type RagChatMessage } from '../../context/RagAssistantContext'
 import {
   askRagPilot,
   cancelAssistantAction,
@@ -15,6 +15,7 @@ import {
   isRegulatoryRagError,
   type RagCitationDto,
   type RagAssistantUiConfig,
+  type EmailActionPreview,
   type RagPendingActionDto,
 } from '../../services/ragApi'
 import { RagAssistantActionCard } from './RagAssistantActionCard'
@@ -34,6 +35,29 @@ const DEFAULT_ASSISTANT_UI: RagAssistantUiConfig = {
 
 function newMessageId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+/** Incluye borradores pendientes en el historial que ve el backend (cuerpo del mail, destinatarios). */
+function enrichAssistantHistoryContent(message: RagChatMessage): string {
+  let content = message.content
+  const pendingEmails =
+    message.pendingActions?.filter(
+      (action) => action.type === 'email' && action.status !== 'cancelled',
+    ) ?? []
+  if (pendingEmails.length === 0) return content
+
+  const blocks = pendingEmails.map((action) => {
+    const preview = action.preview as EmailActionPreview
+    const ccLine = preview.cc?.length ? `CC: ${preview.cc.join(', ')}\n` : ''
+    return (
+      `[Borrador de correo pendiente]\n` +
+      `Para: ${preview.to.join(', ')}\n` +
+      ccLine +
+      `Asunto: ${preview.subject}\n` +
+      `Mensaje:\n${preview.body}`
+    )
+  })
+  return `${content}\n\n${blocks.join('\n\n')}`.trim()
 }
 
 function CitationsList({ citations }: { citations: RagCitationDto[] }) {
@@ -76,9 +100,22 @@ export function RagAssistantWidget() {
   const [question, setQuestion] = useState('')
   const [asking, setAsking] = useState(false)
   const [confirmingActionId, setConfirmingActionId] = useState<string | null>(null)
+  const confirmingActionIdsRef = useRef<Set<string>>(new Set())
   const [assistantUi, setAssistantUi] = useState<RagAssistantUiConfig>(DEFAULT_ASSISTANT_UI)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const MAX_INPUT_HEIGHT_PX = 280
+
+  const adjustTextareaHeight = useCallback(() => {
+    const el = inputRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, MAX_INPUT_HEIGHT_PX)}px`
+  }, [])
+
+  useEffect(() => {
+    adjustTextareaHeight()
+  }, [question, adjustTextareaHeight, open])
 
   useEffect(() => {
     if (!visible) return
@@ -109,12 +146,16 @@ export function RagAssistantWidget() {
     if (trimmed.length < 4 || asking) return
 
     setQuestion('')
+    window.requestAnimationFrame(adjustTextareaHeight)
     setAsking(true)
     appendMessage({ id: newMessageId(), role: 'user', content: trimmed })
 
     const history = messages.map((message) => ({
       role: message.role,
-      content: message.content,
+      content:
+        message.role === 'assistant'
+          ? enrichAssistantHistoryContent(message)
+          : message.content,
     }))
 
     try {
@@ -153,21 +194,29 @@ export function RagAssistantWidget() {
     previousContent: string,
     allPendingActions: RagPendingActionDto[],
   ) {
+    if (pendingAction.status === 'confirmed' || confirmingActionIdsRef.current.has(pendingAction.id)) {
+      return
+    }
+    confirmingActionIdsRef.current.add(pendingAction.id)
     setConfirmingActionId(pendingAction.id)
     try {
       const result = await confirmAssistantAction(pendingAction.id)
+      const confirmationLine = `✅ ${result.message}`
       updateMessage(messageId, {
-        content: `${previousContent}\n\n${result.message}`.trim(),
+        content: `${previousContent}\n\n${confirmationLine}`.trim(),
         pendingActions: allPendingActions.map((action) =>
           action.id === pendingAction.id ? { ...action, status: 'confirmed' as const } : action,
         ),
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo ejecutar la acción'
-      updateMessage(messageId, {
-        content: `${previousContent}\n\nError: ${message}`.trim(),
-      })
+      if (!/ya fue confirmada/i.test(message)) {
+        updateMessage(messageId, {
+          content: `${previousContent}\n\nError: ${message}`.trim(),
+        })
+      }
     } finally {
+      confirmingActionIdsRef.current.delete(pendingAction.id)
       setConfirmingActionId(null)
     }
   }
@@ -296,7 +345,7 @@ export function RagAssistantWidget() {
                     confirming={confirmingActionId === pendingAction.id}
                     label={
                       (message.pendingActions?.length ?? 0) > 1
-                        ? `${pendingAction.type === 'email' ? 'Correo' : 'Evento'} ${index + 1} de ${message.pendingActions?.length ?? 0}`
+                        ? `${pendingAction.type === 'email' ? 'Correo' : pendingAction.type === 'calendar_cancel' ? 'Cancelación' : 'Evento'} ${index + 1} de ${message.pendingActions?.length ?? 0}`
                         : undefined
                     }
                     onConfirm={() =>
@@ -351,14 +400,19 @@ export function RagAssistantWidget() {
               question={question}
               onQuestionChange={setQuestion}
               disabled={asking}
+              onPushToTalkSubmit={() => {
+                const trimmed = inputRef.current?.value.trim() ?? question.trim()
+                if (trimmed.length < 4 || asking) return
+                void handleSubmit({ preventDefault: () => {} } as FormEvent)
+              }}
             />
             <textarea
               ref={inputRef}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
-              rows={2}
+              rows={1}
               placeholder="Escribí tu pregunta…"
-              className="input-surface max-h-28 min-h-[44px] flex-1 resize-none rounded-xl px-3 py-2 text-sm input-brand-focus"
+              className="input-surface max-h-[280px] min-h-[44px] flex-1 resize-none overflow-y-auto rounded-xl px-3 py-2 text-sm input-brand-focus"
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()

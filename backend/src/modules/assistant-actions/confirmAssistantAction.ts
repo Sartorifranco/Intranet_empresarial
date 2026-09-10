@@ -46,7 +46,21 @@ export async function confirmAssistantAction(req: Request, res: Response): Promi
 
     const { data } = pending
     if (data.status === 'confirmed') {
-      res.status(409).json({ error: 'Esta acción ya fue confirmada.' })
+      const payload = data.payload as EmailActionPayload | CalendarActionPayload | CalendarCancelActionPayload
+      const idempotentMessage =
+        data.type === 'email'
+          ? `Correo a ${(payload as EmailActionPayload).to.join(', ')} ya estaba enviado.`
+          : data.type === 'calendar_cancel'
+            ? `Evento "${(payload as CalendarCancelActionPayload).title}" ya estaba cancelado.`
+            : `Evento "${(payload as CalendarActionPayload).title}" ya estaba creado en tu calendario.`
+      res.json({
+        ok: true,
+        actionId,
+        type: data.type,
+        message: idempotentMessage,
+        result: data.result ?? {},
+        alreadyConfirmed: true,
+      } satisfies AssistantActionConfirmResult & { alreadyConfirmed?: boolean })
       return
     }
     if (data.status === 'cancelled') {

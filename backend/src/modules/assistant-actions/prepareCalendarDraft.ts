@@ -1,4 +1,8 @@
-import { assertEmailList, assertNonEmptyString } from './validateCorporateEmails.js'
+import {
+  assertEmailList,
+  assertNonEmptyString,
+  filterOrganizerFromAttendees,
+} from './validateCorporateEmails.js'
 import {
   findCalendarConflicts,
   formatCalendarConflictWarning,
@@ -78,7 +82,10 @@ export async function prepareCalendarDraftTool(input: {
       typeof input.args.location === 'string' && input.args.location.trim()
         ? input.args.location.trim().slice(0, MAX_LOCATION_LEN)
         : null
-    const attendees = parseAttendees(input.args)
+    const attendees = filterOrganizerFromAttendees(
+      parseAttendees(input.args),
+      input.impersonateAs,
+    )
     const addGoogleMeet =
       input.args.addGoogleMeet === true ||
       (typeof input.args.addGoogleMeet === 'string' &&

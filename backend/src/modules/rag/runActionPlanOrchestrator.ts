@@ -11,11 +11,32 @@ import {
 import type { RagToolContext } from './executeRagTool.js'
 import type { RagConversationTurn } from './runRagAssistant.js'
 import type { QuestionIntent } from './assistantIntent.js'
+import {
+  extractPendingEmailDraftFromHistory,
+  isEmailDraftFollowUpQuestion,
+} from './emailDraftFromHistory.js'
+import {
+  formatContactsDirectoryForPrompt,
+  loadIntranetContacts,
+  lookupContactEmailByName,
+  type IntranetContact,
+} from './intranetContacts.js'
+import type { ActionPlan, PlannedEmailAction } from './actionPlanTypes.js'
 
-function extractPreviousAssistantContent(history: RagConversationTurn[]): string | undefined {
+const PREPARED_ACTIONS_STUB_RE =
+  /^Prepar[eé]\s+\*\*\d+\s+de\s+\d+\*\*\s+acciones|Revis[aá]\s+cada\s+tarjeta/i
+
+function extractPreviousAssistantContent(
+  history: RagConversationTurn[],
+  emailBodyFallback?: string,
+): string | undefined {
   const lastAssistant = [...history].reverse().find((turn) => turn.role === 'assistant')
   const content = lastAssistant?.content?.trim()
-  return content && content.length >= 10 ? content : undefined
+  if (content && content.length >= 10 && !PREPARED_ACTIONS_STUB_RE.test(content)) {
+    return content
+  }
+  const fallback = emailBodyFallback?.trim()
+  return fallback && fallback.length >= 10 ? fallback : undefined
 }
 
 export function extractSummaryBodyFromHistory(history: RagConversationTurn[]): string | undefined {
@@ -33,12 +54,78 @@ export function extractSummaryBodyFromHistory(history: RagConversationTurn[]): s
 function buildActionContext(input: {
   history: RagConversationTurn[]
   summariesText?: string
+  organizerEmail?: string
+  pendingEmailDraft?: ActionContext['pendingEmailDraft']
+  emailBodyFallback?: string
+  contactsDirectoryText?: string
 }): ActionContext {
   return {
     referenceDate: todayInTimeZone(),
     summariesText: input.summariesText,
-    previousAssistantText: extractPreviousAssistantContent(input.history),
+    emailBodyFallback: input.emailBodyFallback,
+    pendingEmailDraft: input.pendingEmailDraft,
+    contactsDirectoryText: input.contactsDirectoryText,
+    previousAssistantText: extractPreviousAssistantContent(
+      input.history,
+      input.emailBodyFallback,
+    ),
+    organizerEmail: input.organizerEmail?.trim().toLowerCase(),
   }
+}
+
+function extractPersonNameFromEmailFollowUp(question: string): string | null {
+  const patterns = [
+    /(?:agreg(?:ar|a|á)|sum(?:ar|a|á)|inclu(?:ir|i|í)|a[nñ]ad(?:ir|i|í)|pon(?:er|e|é)|met(?:er|e|é))\s+(?:a\s+)?(.+?)\s+(?:al|en el|del)\s+(?:correo|mail|e-?mail|mensaje|borrador)/i,
+    /(?:agreg(?:ar|a|á)|sum(?:ar|a|á)|inclu(?:ir|i|í)|a[nñ]ad(?:ir|i|í))\s+(?:a\s+)?(.+?)\s*$/i,
+  ]
+  for (const pattern of patterns) {
+    const match = pattern.exec(question.trim())
+    const name = match?.[1]?.trim()
+    if (name && name.length >= 3) return name.replace(/[?.!]+$/, '').trim()
+  }
+  return null
+}
+
+function mergeEmailDraftFollowUp(
+  plan: ActionPlan,
+  question: string,
+  draft: ActionContext['pendingEmailDraft'],
+  contacts: IntranetContact[],
+): ActionPlan {
+  if (!draft || !isEmailDraftFollowUpQuestion(question)) return plan
+
+  const nameToAdd = extractPersonNameFromEmailFollowUp(question)
+  let extraEmail: string | null = null
+  if (nameToAdd && contacts.length > 0) {
+    const lookup = lookupContactEmailByName(nameToAdd, contacts)
+    if (lookup.status === 'found') extraEmail = lookup.email
+  }
+
+  const actions = plan.actions.map((action) => {
+    if (action.kind !== 'email') return action
+    const emailAction = action as PlannedEmailAction
+    const to = [...emailAction.to]
+    const cc = [...(emailAction.cc ?? [])]
+    for (const existing of draft.to) {
+      if (!to.includes(existing)) to.push(existing)
+    }
+    for (const existing of draft.cc) {
+      if (!cc.includes(existing)) cc.push(existing)
+    }
+    if (extraEmail && !to.includes(extraEmail) && !cc.includes(extraEmail)) {
+      to.push(extraEmail)
+    }
+    const subject = emailAction.subject.trim() || draft.subject
+    return {
+      ...emailAction,
+      to,
+      cc: cc.length > 0 ? cc : undefined,
+      subject,
+      bodySource: { type: 'reuse_draft' as const },
+    }
+  })
+
+  return { ...plan, actions }
 }
 
 export function wantsActionPlan(intent: QuestionIntent): boolean {
@@ -86,9 +173,27 @@ export async function runActionPlanOrchestrator(input: {
     return { handled: false, answer: '', preparationFailures: [], deferredActionRefs: [] }
   }
 
+  const pendingEmailDraft = extractPendingEmailDraftFromHistory(input.history)
+  const emailBodyFallback = extractSummaryBodyFromHistory(input.history)
+  let intranetContacts: IntranetContact[] = []
+  if (input.intent.wantsEmail) {
+    try {
+      intranetContacts = await loadIntranetContacts()
+    } catch {
+      intranetContacts = []
+    }
+  }
+
   let actionContext = buildActionContext({
     history: input.history,
     summariesText: input.summariesText,
+    organizerEmail: input.toolCtx.searchSubject,
+    pendingEmailDraft,
+    emailBodyFallback,
+    contactsDirectoryText:
+      intranetContacts.length > 0
+        ? formatContactsDirectoryForPrompt(intranetContacts)
+        : undefined,
   })
 
   if (input.intent.wantsCalendarCancel) {
@@ -136,6 +241,7 @@ export async function runActionPlanOrchestrator(input: {
       history: input.history,
       context: actionContext,
       usageMeter: input.toolCtx.usageMeter,
+      intranetContacts,
     })
   } catch (err) {
     if (err instanceof ActionPlanValidationError) {
@@ -146,10 +252,24 @@ export async function runActionPlanOrchestrator(input: {
         deferredActionRefs: [],
       }
     }
+    if (input.intent.wantsCalendarCancel) {
+      return {
+        handled: true,
+        answer:
+          'No pude preparar la cancelación automáticamente. Pedime que liste tus eventos y decime cuáles cancelar (por hora o título).',
+        preparationFailures: [],
+        deferredActionRefs: [],
+      }
+    }
     return { handled: false, answer: '', preparationFailures: [], deferredActionRefs: [] }
   }
 
-  const plan = extracted.plan
+  let plan = mergeEmailDraftFollowUp(
+    extracted.plan,
+    input.question,
+    pendingEmailDraft,
+    intranetContacts,
+  )
   const validationFailures = extracted.validationFailures.map((failure) => ({
     ref: failure.ref,
     message: failure.message,
@@ -157,17 +277,20 @@ export async function runActionPlanOrchestrator(input: {
   }))
 
   if (plan.actions.length === 0) {
+    const emptyAnswer =
+      validationFailures.length > 0
+        ? buildActionPlanAnswer({
+            plan: { actions: [], assumptions: plan.assumptions },
+            batch: { results: [], deferredRefs: [] },
+          }) +
+          '\n\n' +
+          validationFailures.map((failure) => `- ${failure.message}`).join('\n')
+        : input.intent.wantsCalendarCancel
+          ? 'No identifiqué eventos concretos para cancelar en tu agenda. Decime la hora o el título de cada reunión.'
+          : ''
     return {
-      handled: validationFailures.length > 0,
-      answer:
-        validationFailures.length > 0
-          ? buildActionPlanAnswer({
-              plan: { actions: [], assumptions: plan.assumptions },
-              batch: { results: [], deferredRefs: [] },
-            }) +
-            '\n\n' +
-            validationFailures.map((failure) => `- ${failure.message}`).join('\n')
-          : '',
+      handled: validationFailures.length > 0 || input.intent.wantsCalendarCancel,
+      answer: emptyAnswer,
       preparationFailures: validationFailures,
       deferredActionRefs: [],
     }

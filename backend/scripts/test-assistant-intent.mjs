@@ -29,6 +29,8 @@ const cancelCases = [
   'Eliminar el evento de mañana',
   'Cancelá todas las reuniones a las 4 de la tarde',
   'Cancela todo',
+  'Cancela los 2',
+  'Cancelá los dos eventos',
 ]
 
 let failed = 0
@@ -58,6 +60,17 @@ const range = parseCalendarReadRange('Mostrame mi agenda de la semana', '2026-09
 const rangeOk = range.dateFrom === '2026-09-09' && range.dateTo === '2026-09-15'
 console.log(`${rangeOk ? '✓' : '✗'} RANGE semana ${range.dateFrom} → ${range.dateTo}`)
 if (!rangeOk) failed += 1
+
+const contextualCancel = analyzeQuestionIntent('cancela los 2', [
+  {
+    role: 'assistant',
+    content: 'Tenés **2** evento(s) en tu agenda para mañana…',
+  },
+])
+const contextualOk =
+  contextualCancel.wantsCalendarCancel && !contextualCancel.wantsCalendar
+console.log(`${contextualOk ? '✓' : '✗'} CANCEL contextual "cancela los 2" tras listado`)
+if (!contextualOk) failed += 1
 
 console.log(`\n${failed === 0 ? 'OK' : `${failed} fallo(s)`}`)
 process.exit(failed === 0 ? 0 : 1)
